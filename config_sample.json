@@ -1,0 +1,9 @@
+{
+    "user" : "user",
+    "pass" : "pass",
+    "db" : "madinatic",
+    "proto" : "tcp",
+    "bd_adr" : "127.0.0.1",
+    "adr" : ":8080",
+    "pub" : "web/public/"
+}
