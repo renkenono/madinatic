@@ -20,6 +20,11 @@ CREATE TABLE users (
     pk_userid BIGINT,
     username VARCHAR(30) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
+
+    -- 213 x xx xx xx xx
+    -- devs must add the "+" sign
+    -- int provides faster comparision and search
+    phone INT(12) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
 
     -- ref: http://go-database-sql.org/nulls.html
@@ -28,7 +33,7 @@ CREATE TABLE users (
     confirm_token VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT NOW(),
 
-    -- application will have to expilicity check if
+    -- devs will have to expilicity check if
     -- modified_at is equal to created_at. If so,
     -- no new modifications were introduced
     modified_at DATETIME DEFAULT NOW(),
