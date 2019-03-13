@@ -5,5 +5,9 @@
     "proto" : "tcp",
     "bd_adr" : "127.0.0.1",
     "adr" : ":8080",
-    "pub" : "web/public/"
+    "pub" : "web/public/",
+    "srv" : "smtp.domain.com",
+    "port" : "587",
+    "email" : "email@domain.com",
+    "epass" : "emailpass"
 }
