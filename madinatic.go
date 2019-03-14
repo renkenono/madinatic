@@ -14,9 +14,14 @@ import (
 func main() {
 
 	log.Printf("%sloading config", config.INFO)
-	err := config.App.LoadConfig()
+	dsn, err := config.App.LoadConfig(config.ConfigFile)
 	if err != nil {
 		log.Panicf("%sfailed to load config: %s", config.FATAL, err.Error())
+	}
+
+	err = config.App.InitDB(dsn)
+	if err != nil {
+		log.Panicf("%sfailed to init db connection: %s", config.FATAL, err.Error())
 	}
 
 	// close db connection when server is done

@@ -15,11 +15,15 @@ type Config struct {
 	BDAdr  string `json:"bd_adr"`
 	Adr    string `json:"adr"`
 	Pub    string `json:"pub"`
+	ESrv   string `json:"esrv"`
+	EMail  string `json:"email"`
+	EPass  string `json:"epass"`
 	DB     *sql.DB
 }
 
 const (
-	config = "./config.json"
+	// ConfigFile path to config
+	ConfigFile = "./config.json"
 	// INFO prefix for logging info
 	INFO = "INFO: "
 	// WARN prefix for logging warnings
@@ -28,6 +32,8 @@ const (
 	ERROR = "ERROR: "
 	// FATAL prefix for loggin fatal errors
 	FATAL = "FATAL: "
+	// NAME holds app name
+	NAME = "Madina-TIC"
 )
 
 var (
@@ -36,14 +42,14 @@ var (
 )
 
 // LoadConfig loads config to init server
-func (c *Config) LoadConfig() error {
-	conf, err := os.Open(config)
+func (c *Config) LoadConfig(path string) (string, error) {
+	conf, err := os.Open(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 	err = json.NewDecoder(conf).Decode(c)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	// user:password@tcp(127.0.0.1:3306)/database
@@ -53,13 +59,17 @@ func (c *Config) LoadConfig() error {
 	}
 
 	dsn += "/" + App.DBName
+	return dsn, nil
+}
 
-	App.DB, err = sql.Open("mysql", dsn)
+// InitDB opens a connection and checks if it's working
+func (c *Config) InitDB(dsn string) (err error) {
+
+	c.DB, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}
 	// ping db to check to verify conn
 	err = App.DB.Ping()
 	return err
-
 }
