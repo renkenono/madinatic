@@ -24,8 +24,14 @@ CREATE TABLE users (
     -- 213 x xx xx xx xx
     -- devs must add the "+" sign
     -- int provides faster comparision and search
-    phone INT(12) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    -- The length just specifies how many characters 
+    -- to display when selecting data with the mysql command line client.
+    phone BIGINT NOT NULL UNIQUE,
+
+    -- it seems that bcrypt always generates 60 character hashes.
+    -- bcrypt limits your max password length to 50-72 bytes
+    -- depending on the implementation, thus 50 for safety
+    password VARCHAR(60) NOT NULL,
 
     -- ref: http://go-database-sql.org/nulls.html
     -- NULL should be avoided when possible,
