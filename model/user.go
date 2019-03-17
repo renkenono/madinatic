@@ -1,6 +1,7 @@
 package model
 
 import (
+	"crypto/md5"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -22,39 +23,98 @@ type User struct {
 	Phone      uint64 `json:"phone"`
 	pass       string
 	CreatedAt  time.Time `json:"created_at"`
-	ModifiedAT time.Time `json:"modified_at"`
+	ModifiedAt time.Time `json:"modified_at"`
 }
 
+// User model custom errors
 var (
-	// ErrUserIDInvalid error
-	ErrUserIDInvalid = errors.New("userid is invalid")
-	// ErrUserIDExists error
-	ErrUserIDExists = errors.New("userid already exists")
-	// ErrUsernameInvalid error
-	ErrUsernameInvalid = errors.New("username is invalid")
-	// ErrPassInvalid error
-	ErrPassInvalid = errors.New("password is invalid")
-	// ErrPhoneInvalid error
-	ErrPhoneInvalid = errors.New("phone is invalid")
-	// ErrEmailInvalid error
-	ErrEmailInvalid = errors.New("email is invalid")
-	// ErrUsernameExists error
-	ErrUsernameExists = errors.New("username already exists")
-	// ErrPhoneExists error
-	ErrPhoneExists = errors.New("phone already exists")
-	// ErrEmailExists error
-	ErrEmailExists = errors.New("email already exists")
+	ErrUserIDInvalid    = errors.New("userid is invalid")
+	ErrUserIDExists     = errors.New("userid already exists")
+	ErrUsernameInvalid  = errors.New("username is invalid")
+	ErrUsernameExists   = errors.New("username already exists")
+	ErrEmailInvalid     = errors.New("email is invalid")
+	ErrEmailExists      = errors.New("email already exists")
+	ErrPhoneInvalid     = errors.New("phone is invalid")
+	ErrPhoneExists      = errors.New("phone already exists")
+	ErrPassInvalid      = errors.New("password is invalid")
+	ErrUserDoesNotExist = errors.New("user does not exist")
+	ErrUserNotConfirmed = errors.New("user account is not confirmed")
 )
 
-// New creates a new user after validating data
+// NewUser creates a new user after validating data
 // assuming that id is validating by calling type
 // MySQL does NOT return multi value errors when inserting
 // if two users post the exact same data
 // INSERT will only return error 1062 duplicate values key userid
 // assuming that it is unlikely for a user to insert the same data
 // while processing the other's data
-func (u *User) New(id, username, email, pass, phone string) error {
-	return nil
+func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, error) {
+
+	// validate data
+	var err error
+	u := new(User)
+	u.ID, err = ExistsUserID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Username, err = ExistsUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Email, err = ExistsEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Phone, err = ExistsPhone(phone)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = ValidatePass(pass)
+	if err != nil {
+		return nil, err
+	}
+
+	// store the hashed pass
+	u.pass, err = HashPassword(pass)
+	if err != nil {
+		return nil, err
+	}
+
+	// create token
+	u.CreatedAt = time.Now()
+	u.ModifiedAt = u.CreatedAt
+	token := ""
+	if !confirmed {
+		token = fmt.Sprintf("%x", md5.Sum([]byte(u.CreatedAt.String())))
+	}
+
+	// Insert User
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("INSERT INTO users (pk_userid, username, email, password, phone, confirm_token, created_at, modified_at) values(?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = stmt.Exec(u.ID, u.Username, u.Email, u.pass, u.Phone, token, u.CreatedAt, u.ModifiedAt)
+
+	return u, err
+
+}
+
+// Login checks user's credentials
+func Login(username, pass string) (*User, error) {
+	u, err := UserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	err = CheckPasswordHash(pass, u.pass)
+	return u, err
 }
 
 // ValidateUserID returns an error if following rules are not met
@@ -62,10 +122,7 @@ func (u *User) New(id, username, email, pass, phone string) error {
 // always check for error before using nid
 func ValidateUserID(id string) (uint64, error) {
 	nid, err := strconv.ParseUint(id, 10, 64)
-	if err != nil {
-		return 0, ErrUserIDInvalid
-	}
-	if nid > 999999999999999999 {
+	if err != nil || nid > 999999999999999999 {
 		return 0, ErrUserIDInvalid
 	}
 	return nid, nil
@@ -120,7 +177,7 @@ func ValidatePhone(phone string) (uint64, error) {
 
 	// hardcoded values but who cares
 	// TODO: need to add FIX area codes
-	ok, err := regexp.MatchString(`213[5|6|7][0-9]{6}`, phone)
+	ok, err := regexp.MatchString(`213[5|6|7][0-9]{8}$`, phone)
 	if err != nil || !ok {
 		return 0, ErrPhoneInvalid
 	}
@@ -134,88 +191,273 @@ func ValidatePhone(phone string) (uint64, error) {
 }
 
 // ExistsUserID checks if email already exists
-func ExistsUserID(id string) error {
+func ExistsUserID(id string) (uint64, error) {
 	nid, err := ValidateUserID(id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	var qid uint64
-	err = config.DB.QueryRow("SELECT pk_userid FROM users where pk_userid = ?", nid).Scan(&qid)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid FROM users WHERE pk_userid = ?", nid).Scan(&qid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return nid, nil
 		}
-		return err
+		return 0, err
 	}
 
-	return ErrUserIDExists
+	return 0, ErrUserIDExists
 }
 
 // ExistsUsername checks if username already exists
-func ExistsUsername(name string) error {
-	_, err := ValidateUsername(name)
+func ExistsUsername(name string) (string, error) {
+	sn, err := ValidateUsername(name)
 	if err != nil {
-		return err
+		return "", err
 	}
 	var rid uint64
-	err = config.DB.QueryRow("SELECT pk_userid FROM users where username = ?", name).Scan(&rid)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid FROM users WHERE username = ?", name).Scan(&rid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return sn, nil
 		}
-		return err
+		return "", err
 	}
-	return ErrUsernameExists
+	return "", ErrUsernameExists
 }
 
 // ExistsPhone checks if phone already exists
-func ExistsPhone(phone string) error {
+func ExistsPhone(phone string) (uint64, error) {
 	nphone, err := ValidatePhone(phone)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
 	var rid uint64
-	err = config.DB.QueryRow("SELECT pk_userid FROM users where phone = ?", nphone).Scan(&rid)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid FROM users WHERE phone = ?", nphone).Scan(&rid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return nphone, nil
 		}
-		return err
+		return 0, err
 	}
-	return ErrPhoneExists
+	return 0, ErrPhoneExists
 }
 
 // ExistsEmail checks if email already exists
-func ExistsEmail(email string) error {
+func ExistsEmail(email string) (string, error) {
+	_, err := ValidateEmail(email)
+	if err != nil {
+		return "", err
+	}
 	var rid uint64
-	err := config.DB.QueryRow("SELECT pk_userid FROM users where email = ?", email).Scan(&rid)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid FROM users WHERE email = ?", email).Scan(&rid)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return email, nil
 		}
-		return err
+		return "", err
 	}
-	return ErrEmailExists
+	return "", ErrEmailExists
+}
+
+// UserByID returns user based on given ID(pk_userid)
+func UserByID(id string) (*User, error) {
+	nid, err := ValidateUserID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(User)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid, username, email, phone, password, created_at, modified_at FROM users WHERE pk_userid = ?", nid).Scan(&u.ID, &u.Username, &u.Email, &u.Phone, &u.pass, &u.CreatedAt, &u.ModifiedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserDoesNotExist
+		}
+		return nil, err
+	}
+	return u, nil
+}
+
+// UserByUsername returns user based on given username
+func UserByUsername(username string) (*User, error) {
+	_, err := ValidateUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(User)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid, username, email, phone, password, created_at, modified_at FROM users WHERE username = ?", username).Scan(&u.ID, &u.Username, &u.Email, &u.Phone, &u.pass, &u.CreatedAt, &u.ModifiedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserDoesNotExist
+		}
+		return nil, err
+	}
+	return u, nil
 }
 
 // EditEmail edits user's email after validation
 func (u *User) EditEmail(email string) error {
-	return nil
-}
+	var err error
+	_, err = ExistsEmail(email)
+	if err != nil {
+		return err
+	}
 
-// EditPassword edits user's password after validation
-func (u *User) EditPassword(pass string) error {
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE users SET email = ? WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(email, u.ID)
+	if err != nil {
+		return err
+	}
+	u.Email = email
 	return nil
 }
 
 // EditPhone edits user's phone after validation
 func (u *User) EditPhone(phone string) error {
+	np, err := ExistsPhone(phone)
+	if err != nil {
+		return err
+	}
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE users SET phone = ? WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(np, u.ID)
+	if err != nil {
+		return err
+	}
+	u.Phone = np
 	return nil
+}
+
+// EditPass edits user's password after validation
+func (u *User) EditPass(pass string) error {
+	_, err := ValidatePass(pass)
+	if err != nil {
+		return err
+	}
+
+	// store the hashed pass
+	h, err := HashPassword(pass)
+	if err != nil {
+		return err
+	}
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE users SET password = ? WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(h, u.ID)
+	if err != nil {
+		return err
+	}
+	u.pass = h
+	return nil
+}
+
+// Confirmed returns nil if confirmed
+// ErrUserNotConfirmed if not
+// else error
+func (u *User) Confirmed() error {
+	config.DB.Lock()
+	var token string
+	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT confirm_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrUserDoesNotExist
+		}
+		return err
+	}
+	if token != "" {
+		return ErrUserNotConfirmed
+	}
+	return nil
+}
+
+// Confirm user
+func (u *User) Confirm() error {
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE users SET confirm_token = \"\" WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(u.ID)
+	return err
 }
 
 // Delete a user
 func (u *User) Delete() error {
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("DELETE FROM users WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(u.ID)
+	if err != nil {
+		return err
+	}
 	return nil
+}
+
+// Users return list of users
+func Users() ([]*User, error) {
+	var users []*User
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	rows, err := config.DB.Query("SELECT pk_userid, username, email, phone, password, created_at, modified_at FROM users")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var u User
+	for rows.Next() {
+		err := rows.Scan(&u.ID, &u.Username, &u.Email, &u.Phone, &u.pass, &u.CreatedAt, &u.ModifiedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, &User{
+			ID:         u.ID,
+			Username:   u.Username,
+			Email:      u.Email,
+			Phone:      u.Phone,
+			pass:       u.pass,
+			CreatedAt:  u.CreatedAt,
+			ModifiedAt: u.ModifiedAt,
+		})
+	}
+
+	err = rows.Err()
+	return users, err
 }
