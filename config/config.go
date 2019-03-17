@@ -21,6 +21,7 @@ type Config struct {
 	EPass  string `json:"epass"`
 }
 
+// DBC represents lock protected db connection
 type DBC struct {
 	*sql.DB
 	*sync.Mutex
