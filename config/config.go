@@ -66,7 +66,7 @@ func (c *Config) LoadConfig(path string) (string, error) {
 		dsn += "@" + App.Proto + "(" + App.BDAdr + ")"
 	}
 
-	dsn += "/" + App.DBName
+	dsn += "/" + App.DBName + "?parseTime=true"
 	return dsn, nil
 }
 
@@ -77,6 +77,7 @@ func (db *DBC) InitDB(dsn string) (err error) {
 	if err != nil {
 		return err
 	}
+	DB.Mutex = new(sync.Mutex)
 	// ping db to check to verify conn
 	err = db.Ping()
 	return err
