@@ -1,11 +1,16 @@
 package model
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 	"net/mail"
 	"regexp"
+	"strconv"
 	"time"
 	"unicode"
+
+	"github.com/renkenn/madinatic/config"
 )
 
 // User reprepsents a basic user model
@@ -14,13 +19,17 @@ type User struct {
 	ID         uint64 `json:"id"`
 	Username   string `json:"username"`
 	Email      string `json:"email"`
-	Phone      string `json:"phone"`
+	Phone      uint64 `json:"phone"`
 	pass       string
 	CreatedAt  time.Time `json:"created_at"`
 	ModifiedAT time.Time `json:"modified_at"`
 }
 
 var (
+	// ErrUserIDInvalid error
+	ErrUserIDInvalid = errors.New("userid is invalid")
+	// ErrUserIDExists error
+	ErrUserIDExists = errors.New("userid already exists")
 	// ErrUsernameInvalid error
 	ErrUsernameInvalid = errors.New("username is invalid")
 	// ErrPassInvalid error
@@ -45,115 +54,150 @@ var (
 // assuming that it is unlikely for a user to insert the same data
 // while processing the other's data
 func (u *User) New(id, username, email, pass, phone string) error {
-	err := ValidateUserData(username, email, pass, phone)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-// ValidateUserData validates given data following the given rules
-// although there must be RFC-based verification
-// or at least strong validation, I'll keep it simple
-// thus not for production
-func ValidateUserData(username, email, pass, phone string) error {
-	err := ValidateUsername(username)
+// ValidateUserID returns an error if following rules are not met
+// id must be valid uint64
+// always check for error before using nid
+func ValidateUserID(id string) (uint64, error) {
+	nid, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return err
+		return 0, ErrUserIDInvalid
 	}
-
-	err = ValidateEmail(email)
-	if err != nil {
-		return err
+	if nid > 999999999999999999 {
+		return 0, ErrUserIDInvalid
 	}
-
-	err = ValidatePass(pass)
-	if err != nil {
-		return err
-	}
-
-	err = ValidatePhone(phone)
-	if err != nil {
-		return err
-	}
-	return nil
+	return nid, nil
 }
 
 // ValidateUsername returns an error if following rules are not met
 // username must be of length > 4 and < 30
-func ValidateUsername(username string) error {
-	n := len(username)
+func ValidateUsername(name string) (string, error) {
+	n := len(name)
 	if n <= 4 || n >= 30 {
-		return ErrUsernameInvalid
+		return "", ErrUsernameInvalid
 	}
 
 	// match with regexp
-	ok, err := regexp.MatchString(`^[A-Za-z]+([ _-]?[A-Za-z0-9]+)*$`, username)
+	ok, err := regexp.MatchString(`^[A-Za-z]+([ _-]?[A-Za-z0-9]+)*$`, name)
 	if err != nil || !ok {
-		return ErrUsernameInvalid
+		return "", ErrUsernameInvalid
 	}
 
-	return nil
+	return name, nil
 }
 
 // ValidateEmail returns an error if following rules are not met
 // email must be valid RFC 5322
-func ValidateEmail(email string) error {
+func ValidateEmail(email string) (string, error) {
 
 	// name could be empty
 	_, err := mail.ParseAddress(email)
 	if err != nil {
-		return ErrEmailInvalid
+		return "", ErrEmailInvalid
 	}
-	return nil
+	return email, nil
 }
 
 // ValidatePass returns an error if following rules are not met
 // password must be of length > 8
-func ValidatePass(pass string) error {
+func ValidatePass(pass string) (string, error) {
 	if len(pass) < 8 {
-		return ErrPassInvalid
+		return "", ErrPassInvalid
 	}
 	for _, c := range pass {
 		if unicode.IsControl(c) {
-			return ErrPassInvalid
+			return "", ErrPassInvalid
 		}
 	}
-	return nil
+	return pass, nil
 }
 
 // ValidatePhone returns an error if following rules are not met
 // phone must be of length 12
-func ValidatePhone(phone string) error {
+func ValidatePhone(phone string) (uint64, error) {
 
 	// hardcoded values but who cares
 	// TODO: need to add FIX area codes
-	ok, err := regexp.MatchString(`[\+]?213[5|6|7][0-9]{6}`, phone)
+	ok, err := regexp.MatchString(`213[5|6|7][0-9]{6}`, phone)
 	if err != nil || !ok {
-		return ErrPhoneInvalid
+		return 0, ErrPhoneInvalid
 	}
-	return nil
+
+	nphone, err := strconv.ParseUint(phone, 10, 64)
+	fmt.Println(nphone)
+	if err != nil {
+		return 0, ErrPhoneInvalid
+	}
+	return nphone, nil
 }
 
 // ExistsUserID checks if email already exists
-func ExistsUserID(email string) error {
-	return nil
+func ExistsUserID(id string) error {
+	nid, err := ValidateUserID(id)
+	if err != nil {
+		return err
+	}
+
+	var qid uint64
+	err = config.DB.QueryRow("SELECT pk_userid FROM users where pk_userid = ?", nid).Scan(&qid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+
+	return ErrUserIDExists
 }
 
 // ExistsUsername checks if username already exists
-func ExistsUsername(email string) error {
-	return nil
+func ExistsUsername(name string) error {
+	_, err := ValidateUsername(name)
+	if err != nil {
+		return err
+	}
+	var rid uint64
+	err = config.DB.QueryRow("SELECT pk_userid FROM users where username = ?", name).Scan(&rid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+	return ErrUsernameExists
 }
 
 // ExistsPhone checks if phone already exists
-func ExistsPhone(email string) error {
-	return nil
+func ExistsPhone(phone string) error {
+	nphone, err := ValidatePhone(phone)
+	if err != nil {
+		return err
+	}
+
+	var rid uint64
+	err = config.DB.QueryRow("SELECT pk_userid FROM users where phone = ?", nphone).Scan(&rid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+	return ErrPhoneExists
 }
 
 // ExistsEmail checks if email already exists
 func ExistsEmail(email string) error {
-	return nil
+	var rid uint64
+	err := config.DB.QueryRow("SELECT pk_userid FROM users where email = ?", email).Scan(&rid)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil
+		}
+		return err
+	}
+	return ErrEmailExists
 }
 
 // EditEmail edits user's email after validation
