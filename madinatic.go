@@ -19,13 +19,13 @@ func main() {
 		log.Panicf("%sfailed to load config: %s", config.FATAL, err.Error())
 	}
 
-	err = config.App.InitDB(dsn)
+	err = config.DB.InitDB(dsn)
 	if err != nil {
 		log.Panicf("%sfailed to init db connection: %s", config.FATAL, err.Error())
 	}
 
 	// close db connection when server is done
-	defer config.App.DB.Close()
+	defer config.DB.Close()
 
 	log.Printf("%ssuccesfully loaded config %v", config.INFO, config.App)
 

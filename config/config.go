@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"os"
+	"sync"
 )
 
 // Config represents data needed to init server
@@ -18,7 +19,12 @@ type Config struct {
 	ESrv   string `json:"esrv"`
 	EMail  string `json:"email"`
 	EPass  string `json:"epass"`
-	DB     *sql.DB
+}
+
+// DBC represents lock protected db connection
+type DBC struct {
+	*sql.DB
+	*sync.Mutex
 }
 
 const (
@@ -39,6 +45,8 @@ const (
 var (
 	// App holds current config of the server
 	App Config
+	// DB holds database
+	DB DBC
 )
 
 // LoadConfig loads config to init server
@@ -58,18 +66,19 @@ func (c *Config) LoadConfig(path string) (string, error) {
 		dsn += "@" + App.Proto + "(" + App.BDAdr + ")"
 	}
 
-	dsn += "/" + App.DBName
+	dsn += "/" + App.DBName + "?parseTime=true"
 	return dsn, nil
 }
 
 // InitDB opens a connection and checks if it's working
-func (c *Config) InitDB(dsn string) (err error) {
+func (db *DBC) InitDB(dsn string) (err error) {
 
-	c.DB, err = sql.Open("mysql", dsn)
+	db.DB, err = sql.Open("mysql", dsn)
 	if err != nil {
 		return err
 	}
+	DB.Mutex = new(sync.Mutex)
 	// ping db to check to verify conn
-	err = App.DB.Ping()
+	err = db.Ping()
 	return err
 }

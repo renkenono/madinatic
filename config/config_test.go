@@ -1,6 +1,10 @@
 package config
 
-import "testing"
+import (
+	"testing"
+
+	_ "github.com/go-sql-driver/mysql"
+)
 
 func TestConfig(t *testing.T) {
 	dsn, err := App.LoadConfig("../config.json")
@@ -11,4 +15,8 @@ func TestConfig(t *testing.T) {
 	t.Log(dsn)
 	t.Log(App)
 
+	err = DB.InitDB(dsn)
+	if err != nil {
+		t.Error(err)
+	}
 }
