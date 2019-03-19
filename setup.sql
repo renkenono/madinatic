@@ -50,13 +50,19 @@ CREATE TABLE citizens (
     pk_userid BIGINT,
     first_name VARCHAR(30) NOT NULL,
     family_name VARCHAR(30) NOT NULL,
-    PRIMARY KEY (pk_userid)
+    PRIMARY KEY (pk_userid),
+    FOREIGN KEY (pk_userid)
+    REFERENCES users(pk_userid)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE authorities (
     pk_userid BIGINT,
     first_name VARCHAR(30) NOT NULL,
-    PRIMARY KEY (pk_userid)
+    PRIMARY KEY (pk_userid),
+    FOREIGN KEY (pk_userid)
+    REFERENCES users(pk_userid)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE reports (
