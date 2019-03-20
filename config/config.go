@@ -9,16 +9,17 @@ import (
 
 // Config represents data needed to init server
 type Config struct {
-	User   string `json:"user"`
-	Pass   string `json:"pass"`
-	DBName string `json:"db"`
-	Proto  string `json:"proto"`
-	BDAdr  string `json:"bd_adr"`
-	Adr    string `json:"adr"`
-	Pub    string `json:"pub"`
-	ESrv   string `json:"esrv"`
-	EMail  string `json:"email"`
-	EPass  string `json:"epass"`
+	User    string `json:"user"`
+	Pass    string `json:"pass"`
+	DBName  string `json:"db"`
+	Proto   string `json:"proto"`
+	BDAdr   string `json:"bd_adr"`
+	Adr     string `json:"adr"`
+	Pub     string `json:"pub"`
+	ESrv    string `json:"esrv"`
+	EMail   string `json:"email"`
+	EPass   string `json:"epass"`
+	SignKey string `json:"sign_key"`
 }
 
 // DBC represents lock protected db connection
