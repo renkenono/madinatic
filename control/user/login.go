@@ -2,8 +2,11 @@ package user
 
 import (
 	"encoding/json"
+	"golang.org/x/crypto/bcrypt"
+	// "html/template"
 	"log"
 	"net/http"
+	// "path"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/renkenn/madinatic/config"
@@ -14,6 +17,7 @@ import (
 const (
 	ExpireTime          = 5097600
 	ErrUserDoesNotExist = 1
+	ErrWrongPassword    = iota
 	ErrUserNotConfirmed = iota
 	ErrOther            = iota
 )
@@ -44,7 +48,8 @@ type LoginResp struct {
 // check error which value is of the following
 // 0 - no error
 // 1 - ErrUserDoesNotExist
-// 2 - ErrUserNotConfirmed
+// 2 - ErrWrongPassword
+// 3 - ErrUserNotConfirmed
 // access token is valid for a limited time -3 months-
 // once the access token expires, the user is forced to
 // login again in order to generate a new token
@@ -66,23 +71,27 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	// validate credentials
 	u, err := model.Login(cred.Username, cred.Pass)
 	if err != nil {
-		if err != model.ErrUserDoesNotExist {
+		if err != model.ErrUserDoesNotExist && err != bcrypt.ErrMismatchedHashAndPassword {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
 			return
 		}
-		resp.Error = ErrUserDoesNotExist
+		if err == model.ErrUserDoesNotExist {
+			resp.Error = ErrUserDoesNotExist
+		} else {
+			resp.Error = ErrWrongPassword
+		}
 		goto end
 	}
 
 	err = u.Confirmed()
 	if err != nil {
-		if err != model.ErrUserDoesNotExist {
+		if err != model.ErrUserNotConfirmed {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
 			return
 		}
-		resp.Error = ErrUserDoesNotExist
+		resp.Error = ErrUserNotConfirmed
 		goto end
 	}
 
@@ -108,6 +117,10 @@ end:
 	// send the token back
 	w.WriteHeader(http.StatusOK)
 	w.Write(respjson)
+}
+
+// Login handles HTML login Forms
+func Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // newAccessToken returns a JWT valid token made for user given
