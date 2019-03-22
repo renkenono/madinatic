@@ -2,14 +2,15 @@ package user
 
 import (
 	"encoding/json"
-	"golang.org/x/crypto/bcrypt"
-	// "html/template"
 	"log"
 	"net/http"
-	// "path"
+
+	"golang.org/x/crypto/bcrypt"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gorilla/csrf"
 	"github.com/renkenn/madinatic/config"
+	. "github.com/renkenn/madinatic/control"
 	"github.com/renkenn/madinatic/model"
 )
 
@@ -32,7 +33,8 @@ type Credentials struct {
 // an error number that refers to the following
 // 0 - no error
 // 1 - ErrUserDoesNotExist
-// 2 - ErrUserNotConfirmed
+// 2 - ErrWrongPassword
+// 3 - ErrUserNotConfirmed
 type LoginResp struct {
 	Error       uint   `json:"error"`
 	AccessToken string `json:"access_token"`
@@ -121,6 +123,64 @@ end:
 
 // Login handles HTML login Forms
 func Login(w http.ResponseWriter, r *http.Request) {
+
+	// return webpage if GET
+	if r.Method == http.MethodGet {
+		data := map[string]interface{}{
+			"csrfField": csrf.TemplateField(r),
+		}
+
+		Render(w, r, data, ViewAuth, "login.tmpl")
+		return
+	}
+
+	// handle form
+	log.Printf("%s POST request", config.INFO)
+	err := r.ParseForm()
+	if err != nil {
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		return
+	}
+
+	cred := Credentials{r.FormValue("username"), r.FormValue("password")}
+	var errstr string
+	u, err := model.Login(cred.Username, cred.Pass)
+	if err != nil {
+		if err != model.ErrUserDoesNotExist && err != bcrypt.ErrMismatchedHashAndPassword && err != model.ErrUsernameInvalid {
+			http.Redirect(w, r, "/error", http.StatusInternalServerError)
+			log.Printf("%s POST request: %s", config.INFO, err.Error())
+			return
+		} else if err == model.ErrUserDoesNotExist || err == model.ErrUsernameInvalid {
+			errstr = Out[OutUserDoesNotExist]
+		} else {
+			errstr = Out[OutWrongPassword]
+		}
+		goto logerr
+	}
+
+	err = u.Confirmed()
+	if err != nil {
+		if err != model.ErrUserNotConfirmed {
+			log.Printf("%s POST request: %s", config.INFO, err.Error())
+			http.Redirect(w, r, "/error", http.StatusInternalServerError)
+			return
+		} else {
+			errstr = Out[OutUserNotConfirmed]
+		}
+		goto logerr
+	}
+
+	// login successful, redirect to "/"
+	http.Redirect(w, r, "/", http.StatusFound)
+	return
+logerr:
+	// errstr != ""
+	data := map[string]interface{}{
+		"csrfField": csrf.TemplateField(r),
+		"error":     errstr,
+	}
+
+	Render(w, r, data, ViewAuth, "login.tmpl")
 }
 
 // newAccessToken returns a JWT valid token made for user given
