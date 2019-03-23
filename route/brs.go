@@ -17,4 +17,5 @@ func BrowserRoutes(r *mux.Router) {
 	gen := r.PathPrefix("/").Subrouter()
 	gen.Use(CSRF)
 	gen.HandleFunc("/login", user.Login).Methods("POST", "GET")
+	gen.HandleFunc("/register", user.Register).Methods("POST", "GET")
 }
