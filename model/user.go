@@ -48,40 +48,45 @@ var (
 // INSERT will only return error 1062 duplicate values key userid
 // assuming that it is unlikely for a user to insert the same data
 // while processing the other's data
-func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, error) {
+func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, []error) {
 
 	// validate data
+	var errs []error
 	var err error
 	u := new(User)
 	u.ID, err = ExistsUserID(id)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	u.Username, err = ExistsUsername(username)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	u.Email, err = ExistsEmail(email)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	u.Phone, err = ExistsPhone(phone)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	_, err = ValidatePass(pass)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	// store the hashed pass
 	u.pass, err = HashPassword(pass)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return nil, errs
 	}
 
 	// create token
@@ -97,12 +102,15 @@ func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, er
 	defer config.DB.Unlock()
 	stmt, err := config.DB.Prepare("INSERT INTO users (pk_userid, username, email, password, phone, confirm_token, created_at, modified_at) values(?,?,?,?,?,?,?,?)")
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 
 	_, err = stmt.Exec(u.ID, u.Username, u.Email, u.pass, u.Phone, token, u.CreatedAt, u.ModifiedAt)
+	if err != nil {
+		return nil, []error{err}
+	}
 
-	return u, err
+	return u, nil
 
 }
 
@@ -183,7 +191,6 @@ func ValidatePhone(phone string) (uint64, error) {
 	}
 
 	nphone, err := strconv.ParseUint(phone, 10, 64)
-	fmt.Println(nphone)
 	if err != nil {
 		return 0, ErrPhoneInvalid
 	}
