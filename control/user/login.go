@@ -1,7 +1,6 @@
 package user
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 
@@ -14,16 +13,7 @@ import (
 	"github.com/renkenn/madinatic/model"
 )
 
-// errors and expire time
-const (
-	ExpireTime          = 5097600
-	ErrUserDoesNotExist = 1
-	ErrWrongPassword    = iota
-	ErrUserNotConfirmed = iota
-	ErrOther            = iota
-)
-
-type Credentials struct {
+type credentials struct {
 	Username string `json:"username"`
 	Pass     string `json:"password"`
 }
@@ -60,11 +50,10 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
-	r.ParseForm()
-	var cred Credentials
-	if err := json.NewDecoder(r.Body).Decode(&cred); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
+
+	var cred credentials
+	err := DecodeJSON(w, r, &cred, "login API failed")
+	if err != nil {
 		return
 	}
 
@@ -73,12 +62,12 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	// validate credentials
 	u, err := model.Login(cred.Username, cred.Pass)
 	if err != nil {
-		if err != model.ErrUserDoesNotExist && err != bcrypt.ErrMismatchedHashAndPassword {
+		if err != model.ErrUserDoesNotExist && err != bcrypt.ErrMismatchedHashAndPassword && err != model.ErrUsernameInvalid {
 			w.WriteHeader(http.StatusInternalServerError)
 			log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
 			return
 		}
-		if err == model.ErrUserDoesNotExist {
+		if err == model.ErrUserDoesNotExist || err == model.ErrUsernameInvalid {
 			resp.Error = ErrUserDoesNotExist
 		} else {
 			resp.Error = ErrWrongPassword
@@ -108,17 +97,7 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	resp.AccessToken = token
 
 end:
-	// marshal response
-	respjson, err := json.Marshal(resp)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
-		return
-	}
-
-	// send the token back
-	w.WriteHeader(http.StatusOK)
-	w.Write(respjson)
+	MarshalJSON(w, resp, "login API failed")
 }
 
 // Login handles HTML login Forms
@@ -130,19 +109,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			"csrfField": csrf.TemplateField(r),
 		}
 
-		Render(w, r, data, ViewAuth, "login.tmpl")
+		Render(w, r, data, ViewLogin, "login.tmpl")
 		return
 	}
 
 	// handle form
-	log.Printf("%s POST request", config.INFO)
+	log.Printf("%sPOST request", config.INFO)
 	err := r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error", http.StatusInternalServerError)
 		return
 	}
 
-	cred := Credentials{r.FormValue("username"), r.FormValue("password")}
+	cred := credentials{r.FormValue("username"), r.FormValue("password")}
 	var errstr string
 	u, err := model.Login(cred.Username, cred.Pass)
 	if err != nil {
@@ -151,9 +130,9 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s POST request: %s", config.INFO, err.Error())
 			return
 		} else if err == model.ErrUserDoesNotExist || err == model.ErrUsernameInvalid {
-			errstr = Out[OutUserDoesNotExist]
+			errstr = Out[ErrUserDoesNotExist]
 		} else {
-			errstr = Out[OutWrongPassword]
+			errstr = Out[ErrWrongPassword]
 		}
 		goto logerr
 	}
@@ -165,7 +144,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			http.Redirect(w, r, "/error", http.StatusInternalServerError)
 			return
 		} else {
-			errstr = Out[OutUserNotConfirmed]
+			errstr = Out[ErrUserNotConfirmed]
 		}
 		goto logerr
 	}
@@ -180,11 +159,11 @@ logerr:
 		"error":     errstr,
 	}
 
-	Render(w, r, data, ViewAuth, "login.tmpl")
+	Render(w, r, data, ViewLogin, "login.tmpl")
 }
 
 // newAccessToken returns a JWT valid token made for user given
-// it expires after 1 year (might change)
+// it expires after a period of time (might change)
 // you get to regenerated it by simply logging in
 func newAccessToken(username string) (ss string, err error) {
 	claims := &jwt.StandardClaims{
