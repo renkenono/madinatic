@@ -39,6 +39,7 @@ var (
 	ErrPassInvalid      = errors.New("password is invalid")
 	ErrUserDoesNotExist = errors.New("user does not exist")
 	ErrUserNotConfirmed = errors.New("user account is not confirmed")
+	ErrTokenInvalid     = errors.New("token is invalid")
 )
 
 // NewUser creates a new user after validating data
@@ -391,10 +392,28 @@ func (u *User) EditPass(pass string) error {
 // Confirmed returns nil if confirmed
 // ErrUserNotConfirmed if not
 // else error
-func (u *User) Confirmed() error {
+func (u *User) Confirmed() (string, error) {
 	config.DB.Lock()
 	var token string
 	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT confirm_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", ErrUserDoesNotExist
+		}
+		return "", err
+	}
+	if token != "" {
+		return token, ErrUserNotConfirmed
+	}
+	return "", nil
+}
+
+// Confirm user
+func (u *User) Confirm(t string) error {
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	var token string
 	err := config.DB.QueryRow("SELECT confirm_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -402,22 +421,17 @@ func (u *User) Confirmed() error {
 		}
 		return err
 	}
-	if token != "" {
-		return ErrUserNotConfirmed
-	}
-	return nil
-}
 
-// Confirm user
-func (u *User) Confirm() error {
-	config.DB.Lock()
-	defer config.DB.Unlock()
-	stmt, err := config.DB.Prepare("UPDATE users SET confirm_token = \"\" WHERE pk_userid = ?")
-	if err != nil {
-		return err
-	}
+	if t == token {
+		stmt, err := config.DB.Prepare("UPDATE users SET confirm_token = \"\" WHERE pk_userid = ?")
+		if err != nil {
+			return err
+		}
 
-	_, err = stmt.Exec(u.ID)
+		_, err = stmt.Exec(u.ID)
+	} else {
+		err = ErrTokenInvalid
+	}
 	return err
 }
 

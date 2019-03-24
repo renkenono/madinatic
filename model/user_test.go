@@ -338,7 +338,7 @@ func TestConfirm(t *testing.T) {
 	err = u.Confirmed()
 	if err != nil {
 		if err == ErrUserNotConfirmed {
-			err := u.Confirm()
+			err := u.Confirm("you can't confirm it anyway")
 			if err != nil {
 				t.Error(err)
 			}
