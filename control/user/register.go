@@ -1,10 +1,13 @@
 package user
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/mux"
 	"github.com/renkenn/madinatic/config"
 	. "github.com/renkenn/madinatic/control"
 	"github.com/renkenn/madinatic/model"
@@ -154,7 +157,21 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		// successfully registered the user
 		http.Redirect(w, r, "/", http.StatusFound)
 		log.Println(c)
-		//...
+		// hardcoded, change it later
+		link := "Confirm your account\nhttp://localhost:8080/confirm/"
+		link += strconv.FormatUint(c.ID, 10)
+		t, err := c.Confirmed()
+		if err != nil {
+			if err == model.ErrUserNotConfirmed {
+				link = link + "/" + t
+				m := config.NewMail(c.Email, "Madina-TIC account confirmation", link)
+				log.Println(m)
+				err := m.Send()
+				if err != nil {
+					fmt.Printf("%sregister: %s", config.ERROR, err.Error())
+				}
+			}
+		}
 		return
 	}
 
@@ -168,4 +185,26 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	errs["csrfField"] = csrf.TemplateField(r)
 	Render(w, r, errs, ViewRegister, "register.tmpl")
+}
+
+func Confirm(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	u, err := model.UserByID(vars["id"])
+	if err != nil {
+		if err != model.ErrUserDoesNotExist {
+			log.Printf("%s%s: %s", config.ERROR, regHTMLErr, err.Error())
+		}
+		http.Redirect(w, r, "/error", http.StatusBadRequest)
+		return
+
+	}
+	err = u.Confirm(vars["token"])
+	if err != nil {
+		if err != model.ErrTokenInvalid {
+			log.Printf("%s%s: %s", config.ERROR, regHTMLErr, err.Error())
+		}
+		http.Redirect(w, r, "/error", http.StatusBadRequest)
+		return
+	}
+	w.Write([]byte("Your account was successfully activated."))
 }

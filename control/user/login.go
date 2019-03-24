@@ -75,7 +75,7 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 		goto end
 	}
 
-	err = u.Confirmed()
+	_, err = u.Confirmed()
 	if err != nil {
 		if err != model.ErrUserNotConfirmed {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -137,7 +137,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		goto logerr
 	}
 
-	err = u.Confirmed()
+	_, err = u.Confirmed()
 	if err != nil {
 		if err != model.ErrUserNotConfirmed {
 			log.Printf("%s POST request: %s", config.INFO, err.Error())

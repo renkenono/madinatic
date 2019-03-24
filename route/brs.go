@@ -18,4 +18,5 @@ func BrowserRoutes(r *mux.Router) {
 	gen.Use(CSRF)
 	gen.HandleFunc("/login", user.Login).Methods("POST", "GET")
 	gen.HandleFunc("/register", user.Register).Methods("POST", "GET")
+	gen.HandleFunc("/confirm/{id:[0-9]+}/{token}", user.Confirm).Methods("GET")
 }
