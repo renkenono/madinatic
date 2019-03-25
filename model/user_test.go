@@ -153,9 +153,12 @@ func TestNewUser(t *testing.T) {
 		t.Error(err)
 	}
 
-	u, err := NewUser("109891379001120119", "renken", "renken@tfwno.gf", "renkenpass", "213555555555", true)
-	if err != nil {
-		t.Error(err)
+	u, errs := NewUser("109891379001120119", "renken", "renken@tfwno.gf", "renkenpass", "213555555555", true)
+	if len(errs) > 0 {
+		for _, err := range errs {
+
+			t.Error(err)
+		}
 	} else {
 		t.Log(u)
 	}
@@ -335,7 +338,7 @@ func TestConfirm(t *testing.T) {
 	err = u.Confirmed()
 	if err != nil {
 		if err == ErrUserNotConfirmed {
-			err := u.Confirm()
+			err := u.Confirm("you can't confirm it anyway")
 			if err != nil {
 				t.Error(err)
 			}

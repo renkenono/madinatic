@@ -30,8 +30,8 @@ func main() {
 	log.Printf("%ssuccesfully loaded config %v", config.INFO, config.App)
 
 	r := mux.NewRouter()
-	route.BrowserRoutes(r)
 	route.APIRoutes(r)
+	route.BrowserRoutes(r)
 	s := http.Server{
 		Addr:    config.App.Adr,
 		Handler: r,

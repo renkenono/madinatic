@@ -1,0 +1,50 @@
+{{ define "register" }}
+<html>
+	<head>
+		<title>Register</title>
+	</head>
+	<link rel="stylesheet" href="/static/css/style.css">
+	<body>
+		<form id='register-form' action="/register" method='post'>
+			<p> {{ .csrfField }} </p>
+
+			<input type="text" value="{{ .ID }}"
+			name="id" placeholder="Numéro de carte d'identité" required>
+			<p> {{ .IDErr }} </p>
+
+  			<input type="text" value="{{ .Username }}"
+			name="username" placeholder="Username" required>
+			<p> {{ .UsernameErr }} </p>
+
+			<input type="text" value="{{ .FirstName }}"
+			name="first_name" placeholder="Prénom" required>
+			<p> {{ .FirstNameErr }} </p>
+
+			<input type="text" value="{{ .FamilyName }}"
+			name="family_name" placeholder="Nom" required>
+			<p> {{ .FamilyNameErr }} </p>
+
+  			<input type="email" value="{{ .Email }}"
+			name="email" placeholder="Email" required>
+			<p> {{ .EmailErr }} </p>
+
+			<input type="text" value="{{ .Phone }}"
+			name="phone" placeholder="Numéro de téléphone" required>
+			<p> {{ .PhoneErr }} </p>
+
+  			<input type="password" placeholder="Password"
+			name="password" required>
+			<p> {{ .PassErr }} </p>
+
+  			<input type="password" placeholder="Re Password"
+			name="repassword" required>
+			<p> {{ .RePassErr }} </p>
+
+  			<button type='submit'>S'inscrire</button>
+  			<a href="/login"><span>Déja un membre? Se
+			connecter...</span></a>
+		</form>
+	</body>
+</html>
+
+{{ end }}

@@ -27,15 +27,17 @@ var (
 // Essentially it is just a user
 // with first name and family name added
 // a Citizen account is never confirmed by default
-func NewCitizen(id, username, email, pass, phone, first, family string) (*Citizen, error) {
+func NewCitizen(id, username, email, pass, phone, first, family string) (*Citizen, []error) {
+	var errs []error
 	err := ValidatCitizenName(first, family)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
-	u, err := NewUser(id, username, email, pass, phone, false)
-	if err != nil {
-		return nil, err
+	u, uerrs := NewUser(id, username, email, pass, phone, false)
+	if len(uerrs) > 0 {
+		errs = append(errs, uerrs...)
+		return nil, errs
 	}
 	c := &Citizen{
 		u, first, family,
@@ -46,12 +48,15 @@ func NewCitizen(id, username, email, pass, phone, first, family string) (*Citize
 	defer config.DB.Unlock()
 	stmt, err := config.DB.Prepare("INSERT INTO citizens (pk_userid, first_name, family_name) values(?,?,?)")
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 
 	_, err = stmt.Exec(c.ID, c.FirstName, c.FamilyName)
+	if err != nil {
+		return nil, []error{err}
+	}
 
-	return c, err
+	return c, nil
 }
 
 // ValidatCitizenName returns an error if the following rules are not met

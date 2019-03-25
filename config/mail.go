@@ -16,8 +16,8 @@ type Mail struct {
 	body    string
 }
 
-// New returns a Mail struct
-func New(to string, subj string, body string) Mail {
+// NewMail returns a Mail struct
+func NewMail(to string, subj string, body string) Mail {
 	return Mail{
 		to:      to,
 		subject: subj,

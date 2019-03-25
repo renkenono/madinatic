@@ -24,7 +24,7 @@ CREATE TABLE users (
     -- 213 x xx xx xx xx
     -- devs must add the "+" sign
     -- int provides faster comparision and search
-    -- The length just specifies how many characters 
+    -- The length just specifies how many characters
     -- to display when selecting data with the mysql command line client.
     phone BIGINT NOT NULL UNIQUE,
 
@@ -37,6 +37,7 @@ CREATE TABLE users (
     -- NULL should be avoided when possible,
     -- empty string "" will be used in this matter
     confirm_token VARCHAR(255) NOT NULL,
+    reset_token VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT NOW(),
 
     -- devs will have to expilicity check if

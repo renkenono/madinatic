@@ -9,5 +9,6 @@
     "srv" : "smtp.domain.com",
     "port" : "587",
     "email" : "email@domain.com",
-    "epass" : "emailpass"
+    "epass" : "emailpass",
+    "sign_key" : "secretpass"
 }

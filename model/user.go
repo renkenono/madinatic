@@ -39,6 +39,7 @@ var (
 	ErrPassInvalid      = errors.New("password is invalid")
 	ErrUserDoesNotExist = errors.New("user does not exist")
 	ErrUserNotConfirmed = errors.New("user account is not confirmed")
+	ErrTokenInvalid     = errors.New("token is invalid")
 )
 
 // NewUser creates a new user after validating data
@@ -48,40 +49,45 @@ var (
 // INSERT will only return error 1062 duplicate values key userid
 // assuming that it is unlikely for a user to insert the same data
 // while processing the other's data
-func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, error) {
+func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, []error) {
 
 	// validate data
+	var errs []error
 	var err error
 	u := new(User)
 	u.ID, err = ExistsUserID(id)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	u.Username, err = ExistsUsername(username)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	u.Email, err = ExistsEmail(email)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	u.Phone, err = ExistsPhone(phone)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	_, err = ValidatePass(pass)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
 	}
 
 	// store the hashed pass
 	u.pass, err = HashPassword(pass)
 	if err != nil {
-		return nil, err
+		errs = append(errs, err)
+	}
+
+	if len(errs) > 0 {
+		return nil, errs
 	}
 
 	// create token
@@ -92,17 +98,22 @@ func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, er
 		token = fmt.Sprintf("%x", md5.Sum([]byte(u.CreatedAt.String())))
 	}
 
+	passToken := fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
+
 	// Insert User
 	config.DB.Lock()
 	defer config.DB.Unlock()
-	stmt, err := config.DB.Prepare("INSERT INTO users (pk_userid, username, email, password, phone, confirm_token, created_at, modified_at) values(?,?,?,?,?,?,?,?)")
+	stmt, err := config.DB.Prepare("INSERT INTO users (pk_userid, username, email, password, phone, confirm_token, reset_token, created_at, modified_at) values(?,?,?,?,?,?,?,?,?)")
 	if err != nil {
-		return nil, err
+		return nil, []error{err}
 	}
 
-	_, err = stmt.Exec(u.ID, u.Username, u.Email, u.pass, u.Phone, token, u.CreatedAt, u.ModifiedAt)
+	_, err = stmt.Exec(u.ID, u.Username, u.Email, u.pass, u.Phone, token, passToken, u.CreatedAt, u.ModifiedAt)
+	if err != nil {
+		return nil, []error{err}
+	}
 
-	return u, err
+	return u, nil
 
 }
 
@@ -183,7 +194,6 @@ func ValidatePhone(phone string) (uint64, error) {
 	}
 
 	nphone, err := strconv.ParseUint(phone, 10, 64)
-	fmt.Println(nphone)
 	if err != nil {
 		return 0, ErrPhoneInvalid
 	}
@@ -289,6 +299,26 @@ func UserByID(id string) (*User, error) {
 	return u, nil
 }
 
+// UserByEmail returns user based on given email
+func UserByEmail(email string) (*User, error) {
+	_, err := ValidateEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(User)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid, username, email, phone, password, created_at, modified_at FROM users WHERE email = ?", email).Scan(&u.ID, &u.Username, &u.Email, &u.Phone, &u.pass, &u.CreatedAt, &u.ModifiedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserDoesNotExist
+		}
+		return nil, err
+	}
+	return u, nil
+}
+
 // UserByUsername returns user based on given username
 func UserByUsername(username string) (*User, error) {
 	_, err := ValidateUsername(username)
@@ -354,6 +384,21 @@ func (u *User) EditPhone(phone string) error {
 	return nil
 }
 
+func (u *User) ResetToken() (string, error) {
+	var token string
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT reset_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", ErrUserDoesNotExist
+		}
+		return "", err
+	}
+	return token, nil
+
+}
+
 // EditPass edits user's password after validation
 func (u *User) EditPass(pass string) error {
 	_, err := ValidatePass(pass)
@@ -366,14 +411,16 @@ func (u *User) EditPass(pass string) error {
 	if err != nil {
 		return err
 	}
+	passToken := fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
+
 	config.DB.Lock()
 	defer config.DB.Unlock()
-	stmt, err := config.DB.Prepare("UPDATE users SET password = ? WHERE pk_userid = ?")
+	stmt, err := config.DB.Prepare("UPDATE users SET password = ?, reset_token = ? WHERE pk_userid = ?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(h, u.ID)
+	_, err = stmt.Exec(h, passToken, u.ID)
 	if err != nil {
 		return err
 	}
@@ -384,10 +431,28 @@ func (u *User) EditPass(pass string) error {
 // Confirmed returns nil if confirmed
 // ErrUserNotConfirmed if not
 // else error
-func (u *User) Confirmed() error {
+func (u *User) Confirmed() (string, error) {
 	config.DB.Lock()
 	var token string
 	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT confirm_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", ErrUserDoesNotExist
+		}
+		return "", err
+	}
+	if token != "" {
+		return token, ErrUserNotConfirmed
+	}
+	return "", nil
+}
+
+// Confirm user
+func (u *User) Confirm(t string) error {
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	var token string
 	err := config.DB.QueryRow("SELECT confirm_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -395,22 +460,17 @@ func (u *User) Confirmed() error {
 		}
 		return err
 	}
-	if token != "" {
-		return ErrUserNotConfirmed
-	}
-	return nil
-}
 
-// Confirm user
-func (u *User) Confirm() error {
-	config.DB.Lock()
-	defer config.DB.Unlock()
-	stmt, err := config.DB.Prepare("UPDATE users SET confirm_token = \"\" WHERE pk_userid = ?")
-	if err != nil {
-		return err
-	}
+	if t == token {
+		stmt, err := config.DB.Prepare("UPDATE users SET confirm_token = \"\" WHERE pk_userid = ?")
+		if err != nil {
+			return err
+		}
 
-	_, err = stmt.Exec(u.ID)
+		_, err = stmt.Exec(u.ID)
+	} else {
+		err = ErrTokenInvalid
+	}
 	return err
 }
 
