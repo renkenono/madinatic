@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -14,8 +13,8 @@ import (
 )
 
 const (
-	regAPIErr  = "register API failed"
-	regHTMLErr = "register failed"
+	regAPIErr = "register API failed"
+	regErr    = "register failed"
 )
 
 type resp struct {
@@ -147,16 +146,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 				uerr = true
 			}
 			if uerr {
-				log.Printf("%s%s: %s", config.ERROR, regHTMLErr, cerrs[0].Error())
+				log.Printf("%s%s: %s", config.ERROR, regErr, cerrs[0].Error())
 				http.Redirect(w, r, "/error", http.StatusInternalServerError)
 				return
 			}
 		}
 
 	} else {
+
 		// successfully registered the user
 		http.Redirect(w, r, "/", http.StatusFound)
-		log.Println(c)
+
 		// hardcoded, change it later
 		link := "Confirm your account\nhttp://localhost:8080/confirm/"
 		link += strconv.FormatUint(c.ID, 10)
@@ -164,12 +164,16 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		if err != nil {
 			if err == model.ErrUserNotConfirmed {
 				link = link + "/" + t
-				m := config.NewMail(c.Email, "Madina-TIC account confirmation", link)
-				log.Println(m)
-				err := m.Send()
-				if err != nil {
-					fmt.Printf("%sregister: %s", config.ERROR, err.Error())
-				}
+
+				// send confirmation email on a seperate
+				// goroutine
+				go func(email, link string) {
+					m := config.NewMail(email, "Madina-TIC account confirmation", link)
+					err := m.Send()
+					if err != nil {
+						log.Printf("%s%s: %s", config.ERROR, regErr, err.Error())
+					}
+				}(c.Email, link)
 			}
 		}
 		return
@@ -192,7 +196,7 @@ func Confirm(w http.ResponseWriter, r *http.Request) {
 	u, err := model.UserByID(vars["id"])
 	if err != nil {
 		if err != model.ErrUserDoesNotExist {
-			log.Printf("%s%s: %s", config.ERROR, regHTMLErr, err.Error())
+			log.Printf("%s%s: %s", config.ERROR, regErr, err.Error())
 		}
 		http.Redirect(w, r, "/error", http.StatusBadRequest)
 		return
@@ -201,7 +205,7 @@ func Confirm(w http.ResponseWriter, r *http.Request) {
 	err = u.Confirm(vars["token"])
 	if err != nil {
 		if err != model.ErrTokenInvalid {
-			log.Printf("%s%s: %s", config.ERROR, regHTMLErr, err.Error())
+			log.Printf("%s%s: %s", config.ERROR, regErr, err.Error())
 		}
 		http.Redirect(w, r, "/error", http.StatusBadRequest)
 		return
