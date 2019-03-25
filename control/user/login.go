@@ -3,14 +3,22 @@ package user
 import (
 	"log"
 	"net/http"
+	"strconv"
 
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/csrf"
+	"github.com/gorilla/mux"
 	"github.com/renkenn/madinatic/config"
 	. "github.com/renkenn/madinatic/control"
 	"github.com/renkenn/madinatic/model"
+)
+
+const (
+	logAPIErr = "login API failed"
+	logErr    = "login failed"
+	resetErr  = "reset password failed"
 )
 
 type credentials struct {
@@ -52,7 +60,7 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var cred credentials
-	err := DecodeJSON(w, r, &cred, "login API failed")
+	err := DecodeJSON(w, r, &cred, logAPIErr)
 	if err != nil {
 		return
 	}
@@ -64,7 +72,7 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != model.ErrUserDoesNotExist && err != bcrypt.ErrMismatchedHashAndPassword && err != model.ErrUsernameInvalid {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
+			log.Printf("%s%s: %s", config.ERROR, logAPIErr, err.Error())
 			return
 		}
 		if err == model.ErrUserDoesNotExist || err == model.ErrUsernameInvalid {
@@ -79,7 +87,7 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != model.ErrUserNotConfirmed {
 			w.WriteHeader(http.StatusInternalServerError)
-			log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
+			log.Printf("%s%s: %s", config.ERROR, logAPIErr, err.Error())
 			return
 		}
 		resp.Error = ErrUserNotConfirmed
@@ -91,13 +99,13 @@ func LoginAPI(w http.ResponseWriter, r *http.Request) {
 	token, err = newAccessToken(u.Username)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		log.Printf("%slogin API failed: %s", config.ERROR, err.Error())
+		log.Printf("%s%s: %s", config.ERROR, logAPIErr, err.Error())
 		return
 	}
 	resp.AccessToken = token
 
 end:
-	MarshalJSON(w, resp, "login API failed")
+	MarshalJSON(w, resp, logAPIErr)
 }
 
 // Login handles HTML login Forms
@@ -114,7 +122,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// handle form
-	log.Printf("%sPOST request", config.INFO)
+	log.Printf("%slogin: POST Request", config.INFO)
 	err := r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error", http.StatusInternalServerError)
@@ -127,7 +135,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err != model.ErrUserDoesNotExist && err != bcrypt.ErrMismatchedHashAndPassword && err != model.ErrUsernameInvalid {
 			http.Redirect(w, r, "/error", http.StatusInternalServerError)
-			log.Printf("%s POST request: %s", config.INFO, err.Error())
+			log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
 			return
 		} else if err == model.ErrUserDoesNotExist || err == model.ErrUsernameInvalid {
 			errstr = Out[ErrUserDoesNotExist]
@@ -140,7 +148,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	_, err = u.Confirmed()
 	if err != nil {
 		if err != model.ErrUserNotConfirmed {
-			log.Printf("%s POST request: %s", config.INFO, err.Error())
+			log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
 			http.Redirect(w, r, "/error", http.StatusInternalServerError)
 			return
 		} else {
@@ -160,6 +168,96 @@ logerr:
 	}
 
 	Render(w, r, data, ViewLogin, "login.tmpl")
+}
+
+func ResetPass(w http.ResponseWriter, r *http.Request) {
+	// validate if id exists
+	vars := mux.Vars(r)
+	u, err := model.UserByID(vars["id"])
+	if err != nil {
+		return
+	}
+
+	// validate if reset_token is correct
+	token, err := u.ResetToken()
+	if err != nil {
+		log.Printf("%s%s: %s", config.ERROR, logErr, err.Error())
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		return
+	}
+	if token != vars["token"] {
+		http.Redirect(w, r, "/error", http.StatusBadRequest)
+		return
+	}
+
+	// valid url
+	// return webpage
+	data := map[string]interface{}{
+		"csrfField": csrf.TemplateField(r),
+		"Username":  u.Username,
+		"URL":       r.URL.Path,
+	}
+
+	if r.Method == http.MethodGet {
+		Render(w, r, data, ViewReset, "reset.tmpl")
+		return
+	}
+
+	// process change
+	err = r.ParseForm()
+	if err != nil {
+		log.Printf("%s%s: %s", config.ERROR, logErr, err.Error())
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		return
+	}
+
+	err = u.EditPass(r.FormValue("password"))
+	if err != nil {
+		if err == model.ErrPassInvalid {
+			// return view with invalid password error
+			data["error"] = Out[ErrPassInvalid]
+
+			Render(w, r, data, ViewReset, "reset.tmpl")
+			return
+		} else {
+			log.Printf("%s%s: %s", config.ERROR, logErr, err.Error())
+			http.Redirect(w, r, "/error", http.StatusBadRequest)
+			return
+		}
+	}
+
+	w.Write([]byte("Password successfully updated."))
+}
+
+func Reset(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Printf("%s%s: %s", config.ERROR, resetErr, err.Error())
+		return
+	}
+	u, err := model.UserByEmail(r.FormValue("email"))
+	if err != nil && err != model.ErrUserDoesNotExist {
+		log.Printf("%s%s: %s", config.ERROR, resetErr, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	go func(u *model.User) {
+		link := "Reset Your Account's Password\nhttp://localhost:8080/reset/"
+		link += strconv.FormatUint(u.ID, 10)
+		t, err := u.ResetToken()
+		if err != nil {
+			log.Printf("%s%s: %s", config.ERROR, resetErr, err.Error())
+			return
+		}
+		link = link + "/" + t
+		m := config.NewMail(u.Email, "Madina-TIC reset account password", link)
+		err = m.Send()
+		if err != nil {
+			log.Printf("%s%s: %s", config.ERROR, resetErr, err.Error())
+		}
+
+	}(u)
 }
 
 // newAccessToken returns a JWT valid token made for user given

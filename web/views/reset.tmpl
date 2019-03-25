@@ -1,0 +1,20 @@
+{{ define "reset" }}
+<html>
+	<head>
+		<title>Reset Password</title>
+	</head>
+	<link rel="stylesheet" href="/static/css/style.css">
+	<body>
+		<form action="{{ .URL }}" method='post'>
+  			{{ .csrfField }}
+			<input type="text" value="{{ .Username }}"
+			name="username" readonly>
+  			<input type="password" placeholder="Password"
+			name="password" required>
+			<p> {{ .error }} </p>
+  			<button type='submit'>Update Password</button>
+		</form>
+	</body>
+</html>
+
+{{ end }}

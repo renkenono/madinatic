@@ -15,6 +15,13 @@
   			<button type='submit'>Se connecter</button>
   			<a href="/register"><span>S'inscrire</span></a>
 		</form>
+		<form action="/reset" method='post'>
+  			{{ .csrfField }}
+			<input type="text" placeholder="Email"
+			name="email" required>
+  			<button type='submit'>Reset Password</button>
+		</form>
+
 	</body>
 </html>
 

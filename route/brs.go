@@ -19,4 +19,6 @@ func BrowserRoutes(r *mux.Router) {
 	gen.HandleFunc("/login", user.Login).Methods("POST", "GET")
 	gen.HandleFunc("/register", user.Register).Methods("POST", "GET")
 	gen.HandleFunc("/confirm/{id:[0-9]+}/{token}", user.Confirm).Methods("GET")
+	gen.HandleFunc("/reset/{id:[0-9]+}/{token}", user.ResetPass).Methods("GET", "POST")
+	gen.HandleFunc("/reset", user.Reset).Methods("POST")
 }
