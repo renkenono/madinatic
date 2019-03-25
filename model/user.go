@@ -98,15 +98,17 @@ func NewUser(id, username, email, pass, phone string, confirmed bool) (*User, []
 		token = fmt.Sprintf("%x", md5.Sum([]byte(u.CreatedAt.String())))
 	}
 
+	passToken := fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
+
 	// Insert User
 	config.DB.Lock()
 	defer config.DB.Unlock()
-	stmt, err := config.DB.Prepare("INSERT INTO users (pk_userid, username, email, password, phone, confirm_token, created_at, modified_at) values(?,?,?,?,?,?,?,?)")
+	stmt, err := config.DB.Prepare("INSERT INTO users (pk_userid, username, email, password, phone, confirm_token, reset_token, created_at, modified_at) values(?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return nil, []error{err}
 	}
 
-	_, err = stmt.Exec(u.ID, u.Username, u.Email, u.pass, u.Phone, token, u.CreatedAt, u.ModifiedAt)
+	_, err = stmt.Exec(u.ID, u.Username, u.Email, u.pass, u.Phone, token, passToken, u.CreatedAt, u.ModifiedAt)
 	if err != nil {
 		return nil, []error{err}
 	}
@@ -297,6 +299,26 @@ func UserByID(id string) (*User, error) {
 	return u, nil
 }
 
+// UserByEmail returns user based on given email
+func UserByEmail(email string) (*User, error) {
+	_, err := ValidateEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	u := new(User)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_userid, username, email, phone, password, created_at, modified_at FROM users WHERE email = ?", email).Scan(&u.ID, &u.Username, &u.Email, &u.Phone, &u.pass, &u.CreatedAt, &u.ModifiedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserDoesNotExist
+		}
+		return nil, err
+	}
+	return u, nil
+}
+
 // UserByUsername returns user based on given username
 func UserByUsername(username string) (*User, error) {
 	_, err := ValidateUsername(username)
@@ -362,6 +384,21 @@ func (u *User) EditPhone(phone string) error {
 	return nil
 }
 
+func (u *User) ResetToken() (string, error) {
+	var token string
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT reset_token FROM users WHERE pk_userid = ?", u.ID).Scan(&token)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return "", ErrUserDoesNotExist
+		}
+		return "", err
+	}
+	return token, nil
+
+}
+
 // EditPass edits user's password after validation
 func (u *User) EditPass(pass string) error {
 	_, err := ValidatePass(pass)
@@ -374,14 +411,16 @@ func (u *User) EditPass(pass string) error {
 	if err != nil {
 		return err
 	}
+	passToken := fmt.Sprintf("%x", md5.Sum([]byte(time.Now().String())))
+
 	config.DB.Lock()
 	defer config.DB.Unlock()
-	stmt, err := config.DB.Prepare("UPDATE users SET password = ? WHERE pk_userid = ?")
+	stmt, err := config.DB.Prepare("UPDATE users SET password = ?, reset_token = ? WHERE pk_userid = ?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(h, u.ID)
+	_, err = stmt.Exec(h, passToken, u.ID)
 	if err != nil {
 		return err
 	}

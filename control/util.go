@@ -33,6 +33,7 @@ const (
 const (
 	ViewLogin    = 0
 	ViewRegister = iota
+	ViewReset    = iota
 	ViewHomePage = iota
 )
 
@@ -64,6 +65,7 @@ var (
 	View = []string{
 		"login",
 		"register",
+		"reset",
 	}
 
 	viewsPath = path.Join("web", "views")
