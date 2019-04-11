@@ -59,7 +59,7 @@ CREATE TABLE citizens (
 
 CREATE TABLE authorities (
     pk_userid BIGINT,
-    first_name VARCHAR(30) NOT NULL,
+    name VARCHAR(30) NOT NULL,
     PRIMARY KEY (pk_userid),
     FOREIGN KEY (pk_userid)
     REFERENCES users(pk_userid)
