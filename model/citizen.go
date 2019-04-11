@@ -28,7 +28,7 @@ var (
 // with first name and family name added
 // a Citizen account is never confirmed by default
 func NewCitizen(id, username, email, pass, phone, first, family string) (*Citizen, error) {
-	err := ValidatCitizenName(first, family)
+	err := ValidateCitizenName(first, family)
 	if err != nil {
 		return nil, err
 	}
@@ -54,10 +54,10 @@ func NewCitizen(id, username, email, pass, phone, first, family string) (*Citize
 	return c, err
 }
 
-// ValidatCitizenName returns an error if the following rules are not met
+// ValidateCitizenName returns an error if the following rules are not met
 // first length [3, 30]
 // maybe proper checking should be done
-func ValidatCitizenName(first, family string) error {
+func ValidateCitizenName(first, family string) error {
 	n := len(first)
 	if n < 3 || n > 30 {
 		return ErrFirstNameInvalid
@@ -67,6 +67,10 @@ func ValidatCitizenName(first, family string) error {
 	ok, err := regexp.MatchString(`^[[:alpha:]]+[[:alpha:] ]*$`, first)
 	if err != nil || !ok {
 		return ErrFirstNameInvalid
+	}
+
+	if family == "" {
+		return nil
 	}
 
 	n = len(family)

@@ -24,7 +24,7 @@ CREATE TABLE users (
     -- 213 x xx xx xx xx
     -- devs must add the "+" sign
     -- int provides faster comparision and search
-    -- The length just specifies how many characters 
+    -- The length just specifies how many characters
     -- to display when selecting data with the mysql command line client.
     phone BIGINT NOT NULL UNIQUE,
 
@@ -58,7 +58,7 @@ CREATE TABLE citizens (
 
 CREATE TABLE authorities (
     pk_userid BIGINT,
-    first_name VARCHAR(30) NOT NULL,
+    name VARCHAR(30) NOT NULL,
     PRIMARY KEY (pk_userid),
     FOREIGN KEY (pk_userid)
     REFERENCES users(pk_userid)
