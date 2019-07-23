@@ -1,6 +1,8 @@
 package model
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"golang.org/x/crypto/bcrypt"
+)
 
 // HashPassword is a helper function to hash passwords
 func HashPassword(password string) (string, error) {

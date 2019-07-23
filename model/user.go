@@ -128,6 +128,10 @@ func Login(username, pass string) (*User, error) {
 	return u, err
 }
 
+func (u *User) Pass() string {
+	return u.pass
+}
+
 // ValidateUserID returns an error if following rules are not met
 // id must be valid uint64
 // always check for error before using nid
@@ -488,6 +492,23 @@ func (u *User) Delete() error {
 		return err
 	}
 	return nil
+}
+
+func (u *User) IsCitizen() error {
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT pk_userid FROM citizens WHERE pk_userid = ?", u.ID).Scan(&u.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNotCitizen
+		}
+	}
+	return nil
+
+}
+
+func (u *User) IsAdmin() bool {
+	return u.ID == AdminID
 }
 
 // Users return list of users
