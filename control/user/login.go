@@ -111,6 +111,16 @@ end:
 // Login handles HTML login Forms
 func Login(w http.ResponseWriter, r *http.Request) {
 
+	s, err := config.Store.Get(r, "userdata")
+	if err != nil {
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
+		return
+	}
+	if !s.IsNew {
+		http.Redirect(w, r, "/", http.StatusFound)
+		return
+	}
 	// return webpage if GET
 	if r.Method == http.MethodGet {
 		data := map[string]interface{}{
@@ -123,9 +133,10 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	// handle form
 	log.Printf("%slogin: POST Request", config.INFO)
-	err := r.ParseForm()
+	err = r.ParseForm()
 	if err != nil {
 		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
 		return
 	}
 
@@ -151,10 +162,19 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
 			http.Redirect(w, r, "/error", http.StatusInternalServerError)
 			return
-		} else {
-			errstr = Out[ErrUserNotConfirmed]
 		}
+		errstr = Out[ErrUserNotConfirmed]
+
 		goto logerr
+	}
+
+	s.Values["username"] = u.Username
+	s.AddFlash("Logged in successfully.")
+	err = s.Save(r, w)
+	if err != nil {
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
+		return
 	}
 
 	// login successful, redirect to "/"
@@ -170,6 +190,7 @@ logerr:
 	Render(w, r, data, ViewLogin, "login.tmpl")
 }
 
+// ResetPass of user
 func ResetPass(w http.ResponseWriter, r *http.Request) {
 	// validate if id exists
 	vars := mux.Vars(r)
@@ -218,12 +239,12 @@ func ResetPass(w http.ResponseWriter, r *http.Request) {
 			data["error"] = Out[ErrPassInvalid]
 
 			Render(w, r, data, ViewReset, "reset.tmpl")
-			return
 		} else {
 			log.Printf("%s%s: %s", config.ERROR, logErr, err.Error())
 			http.Redirect(w, r, "/error", http.StatusBadRequest)
-			return
+
 		}
+		return
 	}
 
 	w.Write([]byte("Password successfully updated."))
