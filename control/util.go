@@ -7,9 +7,11 @@ import (
 	"net/http"
 	"path"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/renkenn/madinatic/config"
 )
 
+// Errors constants
 const (
 	ExpireTime = 5097600
 
@@ -30,11 +32,13 @@ const (
 	ErrFamilyNameInvalid = iota
 )
 
+// Views constants
 const (
 	ViewLogin    = 0
 	ViewRegister = iota
 	ViewReset    = iota
-	ViewHomePage = iota
+	ViewHome     = iota
+	ViewSettings = iota
 )
 
 // Out holds messages sent to the end user
@@ -66,6 +70,8 @@ var (
 		"login",
 		"register",
 		"reset",
+		"home",
+		"settings",
 	}
 
 	viewsPath = path.Join("web", "views")
@@ -107,4 +113,28 @@ func MarshalJSON(w http.ResponseWriter, data interface{}, suff string) {
 
 	w.WriteHeader(http.StatusOK)
 	w.Write(djson)
+}
+
+// ParseAccessToken returns username
+func ParseAccessToken(w http.ResponseWriter, tknStr string) (string, error) {
+	var claims jwt.StandardClaims
+	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
+		return config.App.SignKey, nil
+	})
+
+	if err != nil {
+		if err == jwt.ErrSignatureInvalid {
+			w.WriteHeader(http.StatusUnauthorized)
+			return "", err
+		}
+		w.WriteHeader(http.StatusBadRequest)
+		return "", err
+	}
+	if !tkn.Valid {
+		w.WriteHeader(http.StatusUnauthorized)
+		return "", err
+	}
+
+	return claims.Issuer, nil
+
 }

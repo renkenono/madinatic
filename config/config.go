@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"os"
 	"sync"
+
+	"github.com/gorilla/sessions"
 )
 
 // Config represents data needed to init server
@@ -48,6 +50,8 @@ var (
 	App Config
 	// DB holds database
 	DB DBC
+	// Store session store
+	Store = sessions.NewCookieStore([]byte("asdaskdhasdhgsajdgasdsadksakdhasidoajsdousahdopj"))
 )
 
 // LoadConfig loads config to init server

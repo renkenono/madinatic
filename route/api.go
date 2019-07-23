@@ -10,4 +10,5 @@ func APIRoutes(r *mux.Router) {
 	api := r.PathPrefix("/api").Subrouter()
 	api.HandleFunc("/login", user.LoginAPI).Methods("POST")
 	api.HandleFunc("/register", user.RegisterAPI).Methods("POST")
+	api.HandleFunc("/settings", user.SettingsAPI).Methods("POST")
 }

@@ -177,3 +177,46 @@ func CitizenByUsername(username string) (*Citizen, error) {
 	}
 	return c, nil
 }
+
+func (c *Citizen) SetFirstName(f string) error {
+	err := ValidateCitizenName(f, "")
+	if err != nil {
+		return err
+	}
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE citizens SET first_name = ? WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(f, c.ID)
+	if err != nil {
+		return err
+	}
+	c.FirstName = f
+	return nil
+
+}
+
+func (c *Citizen) SetFamilyName(f string) error {
+	err := ValidateCitizenName(f, "")
+	if err != nil {
+		return err
+	}
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE citizens SET family_name = ? WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(f, c.ID)
+	if err != nil {
+		return err
+	}
+	c.FamilyName = f
+	return nil
+}

@@ -17,6 +17,12 @@ type Auth struct {
 	Name string `json:"name"`
 }
 
+const (
+	// AdminID serves to check if current Auth
+	// is the admin or not
+	AdminID = 1
+)
+
 // Auth custom errors
 var (
 	ErrNameInvalid = errors.New("name is invalid")
@@ -142,5 +148,27 @@ func AuthByUsername(username string) (*Auth, error) {
 		return nil, err
 	}
 	return a, nil
+
+}
+
+func (a *Auth) SetName(f string) error {
+	err := ValidateCitizenName(f, "")
+	if err != nil {
+		return err
+	}
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("UPDATE authorities SET family_name = ? WHERE pk_userid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(f, a.ID)
+	if err != nil {
+		return err
+	}
+	a.Name = f
+	return nil
 
 }
