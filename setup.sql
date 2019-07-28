@@ -74,7 +74,7 @@ CREATE TABLE reports (
     modified_at DATETIME DEFAULT NOW(),
     latitude DOUBLE NOT NULL,
     longitude DOUBLE NOT NULL,
-
+    addr VARCHAR(255) NOT NULL,
     -- waiting, rejected, processing, solved [0, 1, 2, 3]
     curr_state TINYINT CHECK (curr_state >= 0 AND curr_state < 4),
 
@@ -100,6 +100,15 @@ CREATE TABLE categories (
     fk_userid BIGINT,
     PRIMARY KEY (pk_catid),
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
+);
+
+CREATE TABLE subreports (
+    fk_reportid INT,
+    fk_catid INT,
+    curr_state TINYINT,
+    PRIMARY KEY (fk_reportid, fk_catid),
+    FOREIGN KEY(fk_reportid) REFERENCES reports(pk_reportid),
+    FOREIGN KEY(fk_catid) REFERENCES categories(pk_catid)
 );
 
 CREATE TABLE comments (
@@ -128,16 +137,6 @@ CREATE TABLE subs (
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
 );
 
-CREATE TABLE repcats (
-    fk_reportid INT,
-    fk_userid BIGINT,
-
-    -- 0 is false, otherwise true
-    solved BOOLEAN DEFAULT 0 NOT NULL,
-    PRIMARY KEY (fk_reportid, fk_userid),
-    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid),
-    FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
-);
 
 CREATE TABLE bans (
     fk_userid BIGINT,
