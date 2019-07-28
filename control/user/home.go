@@ -23,12 +23,11 @@ func Home(w http.ResponseWriter, r *http.Request) {
 		// render guest homepage
 
 		fstr = "welcome " + s.Values["username"].(string)
+		// fstr += s.Flashes()[0].(string)
 	}
 
 	// render user homepage
 
-	fstr += s.Flashes()[0].(string)
-	
 	data := map[string]interface{}{
 		"csrfField": csrf.TemplateField(r),
 		"flash":     fstr,
