@@ -128,6 +128,7 @@ func Login(username, pass string) (*User, error) {
 	return u, err
 }
 
+// Pass returns password
 func (u *User) Pass() string {
 	return u.pass
 }
@@ -303,6 +304,21 @@ func UserByID(id string) (*User, error) {
 	return u, nil
 }
 
+// UserByIDi uint64 param
+func UserByIDi(id uint64) (*User, error) {
+	u := new(User)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err := config.DB.QueryRow("SELECT pk_userid, username, email, phone, password, created_at, modified_at FROM users WHERE pk_userid = ?", id).Scan(&u.ID, &u.Username, &u.Email, &u.Phone, &u.pass, &u.CreatedAt, &u.ModifiedAt)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrUserDoesNotExist
+		}
+		return nil, err
+	}
+	return u, nil
+}
+
 // UserByEmail returns user based on given email
 func UserByEmail(email string) (*User, error) {
 	_, err := ValidateEmail(email)
@@ -388,6 +404,7 @@ func (u *User) EditPhone(phone string) error {
 	return nil
 }
 
+// ResetToken returns the reset token
 func (u *User) ResetToken() (string, error) {
 	var token string
 	config.DB.Lock()
@@ -494,6 +511,7 @@ func (u *User) Delete() error {
 	return nil
 }
 
+// IsCitizen or not
 func (u *User) IsCitizen() error {
 	config.DB.Lock()
 	defer config.DB.Unlock()
@@ -507,6 +525,7 @@ func (u *User) IsCitizen() error {
 
 }
 
+// IsAdmin or not
 func (u *User) IsAdmin() bool {
 	return u.ID == AdminID
 }

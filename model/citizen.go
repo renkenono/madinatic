@@ -178,6 +178,7 @@ func CitizenByUsername(username string) (*Citizen, error) {
 	return c, nil
 }
 
+// SetFirstName c
 func (c *Citizen) SetFirstName(f string) error {
 	err := ValidateCitizenName(f, "")
 	if err != nil {
@@ -200,6 +201,7 @@ func (c *Citizen) SetFirstName(f string) error {
 
 }
 
+// SetFamilyName c
 func (c *Citizen) SetFamilyName(f string) error {
 	err := ValidateCitizenName(f, "")
 	if err != nil {

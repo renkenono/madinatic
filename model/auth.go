@@ -151,6 +151,7 @@ func AuthByUsername(username string) (*Auth, error) {
 
 }
 
+// SetName a
 func (a *Auth) SetName(f string) error {
 	err := ValidateCitizenName(f, "")
 	if err != nil {
