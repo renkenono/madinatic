@@ -74,7 +74,7 @@ CREATE TABLE reports (
     modified_at DATETIME DEFAULT NOW(),
     latitude DOUBLE NOT NULL,
     longitude DOUBLE NOT NULL,
-
+    addr VARCHAR(255) NOT NULL,
     -- waiting, rejected, processing, solved [0, 1, 2, 3]
     curr_state TINYINT CHECK (curr_state >= 0 AND curr_state < 4),
 
@@ -88,10 +88,11 @@ CREATE TABLE reports (
 CREATE TABLE pictures (
 
     -- low chance that names would be compared, string is fine
-    pk_name VARCHAR(20),
+    pk_name VARCHAR(255),
     fk_reportid INT,
     PRIMARY KEY (pk_name),
     FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE categories (
@@ -100,15 +101,29 @@ CREATE TABLE categories (
     fk_userid BIGINT,
     PRIMARY KEY (pk_catid),
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
+    ON DELETE CASCADE
+);
+
+CREATE TABLE subreports (
+    fk_reportid INT,
+    fk_catid INT,
+    curr_state TINYINT,
+    PRIMARY KEY (fk_reportid, fk_catid),
+    FOREIGN KEY(fk_reportid) REFERENCES reports(pk_reportid)
+    ON DELETE CASCADE,
+    FOREIGN KEY(fk_catid) REFERENCES categories(pk_catid)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE comments (
+    pk_commentid INT AUTO_INCREMENT,
     fk_reportid INT,
     fk_userid BIGINT,
     comment VARCHAR(255) NOT NULL,
     created_at DATETIME DEFAULT NOW(),
-    PRIMARY KEY (fk_reportid, fk_userid),
-    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid),
+    PRIMARY KEY (pk_commentid),
+    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid)
+    ON DELETE CASCADE,
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
 );
 
@@ -116,7 +131,8 @@ CREATE TABLE upvotes (
     fk_reportid INT,
     fk_userid BIGINT,
     PRIMARY KEY (fk_reportid, fk_userid),
-    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid),
+    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid)
+    ON DELETE CASCADE,
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
 );
 
@@ -124,26 +140,19 @@ CREATE TABLE subs (
     fk_reportid INT,
     fk_userid BIGINT,
     PRIMARY KEY (fk_reportid, fk_userid),
-    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid),
+    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid)
+    ON DELETE CASCADE,
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
+    ON DELETE CASCADE
 );
 
-CREATE TABLE repcats (
-    fk_reportid INT,
-    fk_userid BIGINT,
-
-    -- 0 is false, otherwise true
-    solved BOOLEAN DEFAULT 0 NOT NULL,
-    PRIMARY KEY (fk_reportid, fk_userid),
-    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid),
-    FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
-);
 
 CREATE TABLE bans (
     fk_userid BIGINT,
     solved BOOLEAN,
     PRIMARY KEY (fk_userid),
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
+    ON DELETE CASCADE
 );
 
 CREATE TABLE notifications (
@@ -154,6 +163,8 @@ CREATE TABLE notifications (
     n_type TINYINT NOT NULL CHECK (n_type >= 0 AND n_type < 4),
     n_message VARCHAR(255) NOT NULL,
     PRIMARY KEY (fk_reportid, fk_userid),
-    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid),
+    FOREIGN KEY (fk_reportid) REFERENCES reports(pk_reportid)
+    ON DELETE CASCADE,
     FOREIGN KEY (fk_userid) REFERENCES users(pk_userid)
+    ON DELETE CASCADE
 );

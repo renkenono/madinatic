@@ -34,11 +34,12 @@ const (
 
 // Views constants
 const (
-	ViewLogin    = 0
-	ViewRegister = iota
-	ViewReset    = iota
-	ViewHome     = iota
-	ViewSettings = iota
+	ViewLogin        = 0
+	ViewRegister     = iota
+	ViewReset        = iota
+	ViewHome         = iota
+	ViewSettings     = iota
+	ViewReportCreate = iota
 )
 
 // Out holds messages sent to the end user
@@ -72,6 +73,7 @@ var (
 		"reset",
 		"home",
 		"settings",
+		"report_create",
 	}
 
 	viewsPath = path.Join("web", "views")
@@ -93,6 +95,7 @@ func Render(w http.ResponseWriter, r *http.Request, data interface{}, v int, fns
 
 }
 
+// DecodeJSON api func helper
 func DecodeJSON(w http.ResponseWriter, r *http.Request, data interface{}, suff string) error {
 	err := json.NewDecoder(r.Body).Decode(data)
 	if err != nil {
@@ -103,6 +106,7 @@ func DecodeJSON(w http.ResponseWriter, r *http.Request, data interface{}, suff s
 	return nil
 }
 
+// MarshalJSON api func helper
 func MarshalJSON(w http.ResponseWriter, data interface{}, suff string) {
 	djson, err := json.Marshal(data)
 	if err != nil {

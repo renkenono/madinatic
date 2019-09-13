@@ -117,7 +117,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s%s: %s", config.INFO, logErr, err.Error())
 		return
 	}
-	if !s.IsNew {
+	if !s.IsNew && s.Values["username"] != "" {
 		http.Redirect(w, r, "/", http.StatusFound)
 		return
 	}

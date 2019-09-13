@@ -18,13 +18,11 @@ func TestNewCitizen(t *testing.T) {
 		t.Error(err)
 	}
 
-	c, errs := NewCitizen("109891379001120119", "renken", "renken@tfwno.gf", "renkenpass", "213555555555", "Renken", "family name hehe")
+	_, errs := NewCitizen("109891379001120119", "renken", "renkennate@gmail.com", "renken123", "213555555555", "Renken", "family name")
 	if len(errs) > 0 {
 		for _, err := range errs {
 			t.Error(err)
 		}
-	} else {
-		t.Error(c)
 	}
 }
 

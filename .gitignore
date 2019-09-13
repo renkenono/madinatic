@@ -8,5 +8,5 @@
 !*/
 
 # Ignore local files
-storage/report/*
+storage/*
 config.json
