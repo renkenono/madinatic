@@ -3,6 +3,8 @@ package route
 import (
 	"net/http"
 
+	"github.com/renkenn/madinatic/control/report"
+
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/mux"
 	"github.com/renkenn/madinatic/config"
@@ -23,4 +25,8 @@ func BrowserRoutes(r *mux.Router) {
 	gen.HandleFunc("/reset", user.Reset).Methods("POST")
 	gen.HandleFunc("/", user.Home).Methods("GET")
 	gen.HandleFunc("/settings", user.Settings).Methods("GET", "POST")
+	gen.HandleFunc("/logout", user.Logout).Methods("GET", "POST")
+
+	gen.HandleFunc("/report/create", report.Create).Methods("GET", "POST")
+	gen.HandleFunc("/report/view/{id:[0-9]+}", report.ViewReport).Methods("GET")
 }

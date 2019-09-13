@@ -2,6 +2,7 @@ package route
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/renkenn/madinatic/control/report"
 	"github.com/renkenn/madinatic/control/user"
 )
 
@@ -11,4 +12,5 @@ func APIRoutes(r *mux.Router) {
 	api.HandleFunc("/login", user.LoginAPI).Methods("POST")
 	api.HandleFunc("/register", user.RegisterAPI).Methods("POST")
 	api.HandleFunc("/settings", user.SettingsAPI).Methods("POST")
+	api.HandleFunc("/report/create", report.CreateAPI).Methods("POST")
 }
