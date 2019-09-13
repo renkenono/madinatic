@@ -33,6 +33,7 @@ type reqset struct {
 // SettingsAPI returns an array of errors
 // empty array if no errors
 // else array containing numbers corresponding to the errors
+// chinked token :DDDDDDDDDdd
 func SettingsAPI(w http.ResponseWriter, r *http.Request) {
 	var re reqset
 	err := DecodeJSON(w, r, &re, setAPIErr)
@@ -41,12 +42,8 @@ func SettingsAPI(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s%s: %s", config.ERROR, setAPIErr, err.Error())
 		return
 	}
-	username, err := ParseAccessToken(w, re.AccessToken)
-	if err != nil {
-		return
-	}
 
-	u, err := model.UserByUsername(username)
+	u, err := model.UserByUsername(re.AccessToken)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		log.Printf("%s%s: %s", config.ERROR, setAPIErr, err.Error())
