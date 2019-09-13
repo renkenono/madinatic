@@ -1,0 +1,41 @@
+{{ define "report_create" }}
+<html>
+	<head>
+		<title>Create a report</title>
+	</head>
+	<link rel="stylesheet" href="/static/css/style.css">
+	<body>
+		<form id='register-form' action="/report/create" method='post' enctype="multipart/form-data">
+			<p> {{ .csrfField }} </p>
+
+			<input type="text" value="{{ .Title }}"
+			name="title" placeholder="Titre de rapport..." required>
+			<p> {{ .TitleErr }} </p>
+
+  			<input type="text" value="{{ .Desc }}"
+			name="desc" placeholder="Description de rapport..." required>
+			<p> {{ .DescErr }} </p>
+
+			<input type="text" value="{{ .Lat }}"
+			name="lat" placeholder="Latitude">
+			<p> {{ .LatErr }} </p>
+
+			<input type="text" value="{{ .Long }}"
+			name="long" placeholder="Longititude">
+			<p> {{ .LongErr }} </p>
+
+  			<input type="text" value="{{ .Address }}"
+			name="address" placeholder="Address de rapport..." required>
+			<p> {{ .AddressErr }} </p>
+
+			{{ range .Cats }}
+				<input type="checkbox" name="cat" value="{{ .Name }}"> {{ .Name }}<br>
+			{{ end }}
+			 <label for="file">Images:</label>
+			<input type="file" name="pics" id="pics" multiple>
+  			<button type='submit'>Envoyer</button>
+		</form>
+	</body>
+</html>
+
+{{ end }}
