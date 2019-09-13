@@ -128,6 +128,31 @@ func Login(username, pass string) (*User, error) {
 	return u, err
 }
 
+// Cname returns full name
+func (u *User) Cname() (string, error) {
+	err := u.IsCitizen()
+	if err != nil {
+		if err != ErrNotCitizen {
+			// Auth
+			a, err := AuthByUsername(u.Username)
+			if err != nil {
+				return "", err
+			}
+			return a.Name, nil
+		}
+		// unexpected error
+		return "", err
+	}
+	// citizen
+	c, err := CitizenByUsername(u.Username)
+	if err != nil {
+		return "", err
+	}
+
+	return c.FamilyName + " " + c.FamilyName, nil
+
+}
+
 // Pass returns password
 func (u *User) Pass() string {
 	return u.pass
