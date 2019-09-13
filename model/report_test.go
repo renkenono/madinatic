@@ -50,4 +50,9 @@ func TestReport(t *testing.T) {
 			t.Error(err)
 		}
 	}
+
+	_, err = ReportByID("50")
+	if err != nil {
+		t.Error(err)
+	}
 }

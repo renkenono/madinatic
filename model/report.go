@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +26,14 @@ type Report struct {
 	StateModifiedAt time.Time
 	Username        string
 	UID             uint64
+	UserCName       string
+}
+
+// SubReport struct
+type SubReport struct {
+	RID   uint64
+	CID   uint
+	State uint8
 }
 
 // Report state values
@@ -89,6 +98,60 @@ func NewReport(username, title, desc, addr, lat, long string) (*Report, error) {
 	// get the last record
 
 	err = config.DB.QueryRow("SELECT pk_reportid FROM reports ORDER BY pk_reportid DESC LIMIT 1;").Scan(&r.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, ErrReportDoesNotExist
+		}
+		return nil, err
+	}
+
+	return r, nil
+}
+
+// NewSubReport fn
+func (r *Report) NewSubReport(catname string) error {
+	sb := new(SubReport)
+	sb.RID = r.ID
+	c, err := CatByName(catname)
+	if err != nil {
+		return err
+	}
+	sb.CID = c.ID
+	// Insert Report
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	stmt, err := config.DB.Prepare("INSERT INTO subreports (fk_reportid, fk_catid, curr_state) values(?,?,?)")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(sb.RID, sb.CID, sb.State)
+	return err
+}
+
+// NewPic help
+func (r *Report) NewPic(f io.Reader, fn string) (*Pic, error) {
+	p, err := NewPic(r.ID, f, fn)
+	return p, err
+}
+
+// Pics of report
+func (r *Report) Pics() ([]string, error) {
+	ps, err := PicsByReport(r.ID)
+	return ps, err
+}
+
+// ReportByID h
+func ReportByID(id string) (*Report, error) {
+	idi, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return nil, errors.New("id not a valid uint64")
+	}
+
+	r := new(Report)
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	err = config.DB.QueryRow("SELECT pk_reportid, title, descr, created_at, modified_at, latitude, longitude, addr, curr_state, state_modified_at, fk_userid FROM reports WHERE pk_reportid = ?", idi).Scan(&r.ID, &r.Title, &r.Desc, &r.CreatedAt, &r.ModifiedAt, &r.Latitude, &r.Longtitude, &r.Address, &r.State, &r.StateModifiedAt, &r.UID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, ErrReportDoesNotExist
