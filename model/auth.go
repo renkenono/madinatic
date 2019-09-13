@@ -37,7 +37,7 @@ func NewAuth(id, username, email, pass, phone, name string) (*Auth, []error) {
 		return nil, []error{err}
 	}
 
-	u, uerrs := NewUser(id, username, email, pass, phone, false)
+	u, uerrs := NewUser(id, username, email, pass, phone, true)
 	if len(uerrs) > 0 {
 		errs = append(errs, uerrs...)
 		return nil, errs
