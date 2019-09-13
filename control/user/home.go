@@ -10,6 +10,7 @@ import (
 	. "github.com/renkenn/madinatic/control"
 )
 
+// Home page
 func Home(w http.ResponseWriter, r *http.Request) {
 	s, err := config.Store.Get(r, "userdata")
 	if err != nil {
@@ -19,7 +20,8 @@ func Home(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fstr := "welcome guest."
-	if !s.IsNew {
+	_, ok := s.Values["username"]
+	if !s.IsNew && !ok {
 		// render guest homepage
 
 		fstr = "welcome " + s.Values["username"].(string)
