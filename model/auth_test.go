@@ -17,7 +17,7 @@ func TestNewAuth(t *testing.T) {
 		t.Error(err)
 	}
 
-	_, errs := NewAuth("231321", "renauth", "renken@auth.dz", "renkenpass", "213555655555", "RenkenAuth")
+	_, errs := NewAuth("1", "admin", "admin@admin.com", "adminpass", "213555665555", "Admin")
 	if len(errs) > 0 {
 		for _, err := range errs {
 			t.Error(err)
