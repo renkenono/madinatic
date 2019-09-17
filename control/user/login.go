@@ -250,6 +250,7 @@ func ResetPass(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Password successfully updated."))
 }
 
+// Reset password
 func Reset(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
 	if err != nil {
