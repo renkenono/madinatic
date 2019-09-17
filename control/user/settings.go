@@ -102,6 +102,8 @@ func SettingsAPI(w http.ResponseWriter, r *http.Request) {
 
 }
 
+// Settings allows the user to change
+// their information
 func Settings(w http.ResponseWriter, r *http.Request) {
 	s, err := config.Store.Get(r, "userdata")
 	if err != nil {
