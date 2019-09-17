@@ -1,0 +1,42 @@
+body{
+background-color:white;
+font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}
+
+.que div{
+margin-bottom: 20px;
+
+}
+
+.que div h2{
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-left: 100px;
+    color: #48ACF9;
+
+}
+
+.que p{
+    width: 50%;
+    margin-left: 150px;
+
+}
+.que div ul {
+    margin-top: 10px;
+    list-style: none;
+    margin-left: 160px;
+    border-left: 4px solid #48ACF9;
+    border-top-left-radius:  5px;
+    border-bottom-left-radius: 5px;
+}
+
+.que div ul li{
+    margin-left: 15px;
+}
+
+.que .top{
+    margin-top: 100px;
+}
+.que .bottom{
+    margin-bottom: 150px;
+}
