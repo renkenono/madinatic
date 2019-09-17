@@ -62,7 +62,16 @@ func CatsStr() ([]string, error) {
 	}
 	csstr := []string{}
 	for _, c := range cs {
-		csstr = append(csstr, c.Name)
+		in := false
+		for _, cn := range csstr {
+			if c.Name == cn {
+				in = true
+				break
+			}
+		}
+		if !in {
+			csstr = append(csstr, c.Name)
+		}
 	}
 	return csstr, nil
 }
@@ -122,6 +131,7 @@ func CatByID(id string) (*Cat, error) {
 }
 
 // CatByName returns cat based on given name
+// messed up design
 func CatByName(name string) (*Cat, error) {
 	c := new(Cat)
 	config.DB.Lock()
