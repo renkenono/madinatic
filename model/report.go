@@ -3,7 +3,6 @@ package model
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -54,7 +53,7 @@ var (
 	ErrReportDoesNotExist = errors.New("report does not exist")
 )
 
-// NewReport returns a report duhhhhhahdisaudhasuidhuasidhai
+// NewReport returns a report
 func NewReport(username, title, desc, addr, lat, long string) (*Report, error) {
 	r := new(Report)
 	r.Title = title
@@ -127,6 +126,68 @@ func (r *Report) NewSubReport(catname string) error {
 
 	_, err = stmt.Exec(sb.RID, sb.CID, sb.State)
 	return err
+}
+
+// Categories returns a string array of
+// the report's categories
+func (r *Report) Categories() ([]string, error) {
+	var cats []string
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	rows, err := config.DB.Query("SELECT (cat_name) FROM subreports JOIN categories ON fk_catid=pk_catid WHERE fk_reportid=?;", r.ID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var s string
+	for rows.Next() {
+		err := rows.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+
+		// just want to avoid slicing issues
+		// which is unavoidable with this most likely
+		// will see in run-time
+		s1 := s
+		cats = append(cats, s1)
+	}
+
+	err = rows.Err()
+	return cats, err
+}
+
+// Auths retuns concerned auths
+// didn't even bother changing var names
+func (r *Report) Auths() ([]string, error) {
+	var cats []string
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	rows, err := config.DB.Query("SELECT username FROM (SELECT pk_userid FROM (SELECT categories.fk_userid FROM subreports JOIN categories ON fk_catid=pk_catid WHERE fk_reportid=? ) as a JOIN authorities ON pk_userid=fk_userid) as b JOIN users ON b.pk_userid = users.pk_userid;", r.ID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var s string
+	for rows.Next() {
+		err := rows.Scan(&s)
+		if err != nil {
+			return nil, err
+		}
+
+		// just want to avoid slicing issues
+		// which is unavoidable with this most likely
+		// will see in run-time
+		s1 := s
+		cats = append(cats, s1)
+	}
+
+	err = rows.Err()
+	return cats, err
 }
 
 // NewPic help
@@ -203,6 +264,86 @@ func ReportsByUser(username string) ([]*Report, error) {
 	return reports, err
 }
 
+// Reports returns list of reports
+// Update Cname for each report after this
+// this impacts performance somewhat
+func Reports() ([]*Report, error) {
+	var reports []*Report
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+
+	rows, err := config.DB.Query("SELECT pk_reportid, title, descr, reports.created_at, addr, curr_state, fk_userid, users.username FROM reports JOIN users ON users.pk_userid = reports.fk_userid;")
+	if err != nil {
+		return nil, err
+	}
+
+	var r Report
+	for rows.Next() {
+		err := rows.Scan(&r.ID, &r.Title, &r.Desc, &r.CreatedAt, &r.Address, &r.State, &r.UID, &r.Username)
+		if err != nil {
+			return nil, err
+		}
+
+		reports = append(reports, &Report{
+			ID:        r.ID,
+			Title:     r.Title,
+			Desc:      r.Desc,
+			CreatedAt: r.CreatedAt,
+			Address:   r.Address,
+			State:     r.State,
+			UID:       r.UID,
+			Username:  r.Username,
+		})
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return reports, nil
+}
+
+// ReportsLatest returns the n latest reports
+func ReportsLatest(n uint64) ([]*Report, error) {
+	var reports []*Report
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+
+	rows, err := config.DB.Query("SELECT pk_reportid, title, descr, reports.created_at, addr, curr_state, fk_userid, users.username FROM reports JOIN users ON users.pk_userid = reports.fk_userid ORDER BY reports.pk_reportid DESC LIMIT ?;", n)
+	if err != nil {
+		return nil, err
+	}
+
+	var r Report
+	for rows.Next() {
+		err := rows.Scan(&r.ID, &r.Title, &r.Desc, &r.CreatedAt, &r.Address, &r.State, &r.UID, &r.Username)
+		if err != nil {
+			return nil, err
+		}
+
+		reports = append(reports, &Report{
+			ID:        r.ID,
+			Title:     r.Title,
+			Desc:      r.Desc,
+			CreatedAt: r.CreatedAt,
+			Address:   r.Address,
+			State:     r.State,
+			UID:       r.UID,
+			Username:  r.Username,
+		})
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return reports, nil
+}
+
 // ReportsByState returns reports made by user
 // make sure to get the username of u and update report
 // can't be performed here due to double mutex lock
@@ -224,7 +365,6 @@ func ReportsByState(s uint8) ([]*Report, error) {
 		if err != nil {
 			return nil, err
 		}
-		fmt.Println(r)
 
 		reports = append(reports, &Report{
 			ID:              r.ID,
@@ -245,7 +385,6 @@ func ReportsByState(s uint8) ([]*Report, error) {
 		return nil, err
 	}
 
-	println("something ", reports)
 	return reports, nil
 }
 
@@ -329,4 +468,91 @@ func (r *Report) EditDesc(desc string) error {
 	r.Desc = desc
 	r.ModifiedAt = now
 	return nil
+}
+
+// EditUser gives ownership to a given user
+func (r *Report) EditUser(id uint64) error {
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	now := time.Now()
+	stmt, err := config.DB.Prepare("UPDATE reports SET fk_userid = ?, modified_at = ? WHERE pk_reportid = ?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(id, now, r.ID)
+	if err != nil {
+		return err
+	}
+
+	r.UID = id
+	r.ModifiedAt = now
+	return nil
+}
+
+// Solve partially/completely solves the report.
+// it expects a call from an auth responsible
+// of one subreports
+func (r *Report) Solve(auth string) error {
+	//SELECT pk_catid FROM categories JOIN authorities ON pk_userid=1 AND pk_userid=fk_userid;
+	/*
+		SELECT fk_reportid, fk_catid FROM (SELECT pk_catid FROM categories JOIN authorities ON pk_userid=231321 AND pk_userid=fk_userid) as a JOIN subreports ON pk_catid=fk_catid AND fk_reportid=2;
+	*/
+
+	a, err := AuthByUsername(auth)
+	if err != nil {
+		return err
+	}
+
+	config.DB.Lock()
+	defer config.DB.Unlock()
+	rows, err := config.DB.Query("SELECT fk_catid FROM (SELECT pk_catid FROM categories JOIN authorities ON pk_userid=? AND pk_userid=fk_userid) as a JOIN subreports ON pk_catid=fk_catid AND fk_reportid=?;", a.ID, r.ID)
+	if err != nil {
+		return err
+	}
+
+	var cats []uint
+	var cat uint
+
+	for rows.Next() {
+		err := rows.Scan(&cat)
+		if err != nil {
+			return err
+		}
+		cats = append(cats, cat)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return err
+	}
+
+	rows.Close()
+
+	for _, cat := range cats {
+		stmt, err := config.DB.Prepare("UPDATE subreports SET curr_state = ?  WHERE fk_catid = ? AND fk_reportid = ? ")
+		if err != nil {
+			return err
+		}
+
+		_, err = stmt.Exec(ReportSolved, cat, r.ID)
+		if err != nil {
+			return err
+		}
+	}
+
+	var count int
+	err = config.DB.QueryRow("SELECT COUNT(*) FROM subreports WHERE fk_reportid = ? ;", r.ID).Scan(&count)
+	if err != nil {
+		return err
+	}
+	if len(cats) == count {
+		err := r.SetState(ReportSolved)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+
 }
