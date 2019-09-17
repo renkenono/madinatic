@@ -32,6 +32,7 @@ type req struct {
 	FamilyName string `json:"family_name"`
 }
 
+// RegisterAPI allows registration over JSON
 func RegisterAPI(w http.ResponseWriter, r *http.Request) {
 
 	var re req
@@ -79,6 +80,7 @@ func RegisterAPI(w http.ResponseWriter, r *http.Request) {
 	MarshalJSON(w, rep, regAPIErr)
 }
 
+// Register GET+POST
 func Register(w http.ResponseWriter, r *http.Request) {
 	// return webpage if GET
 	if r.Method == http.MethodGet {
@@ -125,15 +127,15 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			case model.ErrUserIDExists:
 				errs["IDErr"] = Out[ErrUserIDExists]
 			case model.ErrUsernameInvalid:
-				errs["UsernameErr"] = Out[ErrUserIDInvalid]
+				errs["UsernameErr"] = Out[ErrUsernameInvalid]
 			case model.ErrUsernameExists:
 				errs["UsernameErr"] = Out[ErrUsernameExists]
 			case model.ErrEmailInvalid:
-				errs["EmailErr"] = Out[ErrUsernameInvalid]
+				errs["EmailErr"] = Out[ErrEmailInvalid]
 			case model.ErrEmailExists:
 				errs["EmailErr"] = Out[ErrEmailExists]
 			case model.ErrPhoneInvalid:
-				errs["PhoneErr"] = Out[ErrEmailInvalid]
+				errs["PhoneErr"] = Out[ErrPhoneInvalid]
 			case model.ErrPhoneExists:
 				errs["PhoneErr"] = Out[ErrPhoneExists]
 			case model.ErrPassInvalid:
@@ -191,6 +193,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	Render(w, r, errs, ViewRegister, "register.tmpl")
 }
 
+// Confirm user's confirmation
 func Confirm(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	u, err := model.UserByID(vars["id"])
