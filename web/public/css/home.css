@@ -1,0 +1,292 @@
+
+
+*{
+    margin: 0;
+    padding: 0;
+}
+
+html,body{
+    height: 100%;
+}
+#main{
+    min-height: 100%;
+}
+.navbar{
+    overflow: auto;
+    
+}
+
+
+nav{
+width: 100%;
+height: 80px;
+background-color: black;
+line-height: 80px;
+margin-bottom: 0px;
+
+    
+
+
+}
+
+nav .out {
+    float: right;
+    margin-left: 30px;
+}
+
+nav ul {
+    float: left;
+    margin-left: 30px;
+}
+
+
+nav ul li {
+    list-style-type: none;
+    display: inline-block;
+    font-family: Arial, Verdana, sans-serif;
+
+    
+
+}
+
+
+
+
+
+nav ul li i {
+    margin-right: 5px;
+}
+
+
+
+
+nav a input{
+    float: right;
+    color: #000;
+    
+    font-size: 15px;
+    padding: 10px;
+   
+    margin-top: 20px;
+    margin-right: 15px;
+   
+    width: 150px;
+    
+  
+    
+   
+     
+    transition: all .4s;
+   border-radius: 5px;
+    
+}
+
+
+
+nav a .logine{
+   
+    background: #FBD10D;
+    margin-right: 0px;
+    color: black;
+    border: 1px solid #FBD10D ;
+    
+}
+nav a .logine:hover{
+    background:  blue;
+    margin-right: 0px;
+    color: white;
+    border: 1px solid blue ;
+    
+}
+
+
+nav a :hover{
+    background: #1E90FF;
+    color: white;
+
+}
+
+nav a .rege{
+
+margin-right: 2px;
+border: 1px solid #FBD10D ;
+background: white;
+color: black;
+
+
+
+}
+nav a .rege:hover{
+  background:  blue;
+    margin-right: 0px;
+    color: white;
+    border: 1px solid blue ;
+}
+
+
+nav ul li a {
+    text-decoration: none;
+    color: white; 
+    padding: 20px;
+
+}
+
+nav ul li a.active{
+    border-bottom: 2px solid white;
+    color: white;
+}
+
+nav ul li a.icon{
+    display: none;
+
+}
+
+nav ul a:hover{
+    color: gray;
+
+}
+
+
+
+
+#main .video img{
+    width: 100%;
+
+    
+}
+
+#main .sec2{
+    
+    width: 100%;
+    background-color:#DCDCDC;
+    
+    display: flex;
+    padding-bottom: 150px;
+
+  
+}
+#main .sec2 .inst ,#main .sec2 .posts{
+    flex: 1;
+    padding: 0px;
+}
+ 
+#main .sec2 .inst h1{
+    margin-top: 80px;
+   margin-left: 50px;
+   font-size: 25px;
+   font-family: Arial, Verdana, sans-serif;
+   margin-bottom: 60px;
+   padding-bottom:10px; 
+   border-bottom: 1px solid gray;
+    
+}
+
+
+
+#main .sec2 .inst ul li {
+    list-style-type: none;
+    margin-top: 30px;
+    margin-left: 90px;
+    font-family: Arial, Verdana, sans-serif;
+    color: gray;
+
+
+}
+
+
+#main .sec2 .posts h1{
+    
+
+    margin-left: 35px;
+    margin-top: 30px;
+    font-size: 25px;
+    font-family: Arial, Verdana, sans-serif;
+
+}
+#main .sec2 .posts {
+
+
+    margin-top: 20px;
+    margin-left: 40px;
+  
+  
+    
+}
+
+#main .sec2 .posts h2{
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid gray;
+}
+
+#main .sec2 .posts .mainpost{
+    display: grid;
+    
+}
+#main .sec2 .posts .mainpost div{
+    grid-row: 1/2 ;
+     height: 400px; 
+     width: 300px;
+     margin: 5px; 
+     padding: 0px;
+     border:1px solid black;
+     box-shadow: 15px 15px 15px gray;
+
+}
+#main .sec2 .posts .mainpost div p{
+  margin: 10px;
+  color: gray;
+}
+#main .sec2 .posts .mainpost div p span{
+  color: black;
+  font-size: 15px;
+ 
+}
+
+#main .sec2 .posts .mainpost div a .Det{
+  background: #FBD10D;
+  margin-right: 0px;
+  color: black;
+  border: 1px solid #FBD10D ;
+  font-size: 15px;
+    padding: 10px;
+    margin: 5px;
+   
+    margin-top: 20px;
+    margin-right: 15px;
+   
+    width: 150px;
+    
+  
+    
+   
+     
+    transition: all .4s;
+   border-radius: 5px;
+
+}
+
+#main .sec2 .posts .mainpost div a .Det:hover{
+  background:  rgb(12, 207, 233);
+    margin-right: 0px;
+    color: white;
+    border: 1px solid#1E90FF ;
+
+}
+
+
+
+
+.reges a input:hover{
+    background-color:  rgb(12, 207, 233);
+}
+
+
+
+/********Media Queries********/
+
+
+
+*{
+  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
+}

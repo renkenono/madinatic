@@ -16,8 +16,8 @@ type Pic struct {
 
 // NewPic stores pic
 func NewPic(rid uint64, f io.Reader, fn string) (*Pic, error) {
-	fn = path.Join("storage", fn)
-	out, err := os.Create(fn)
+	fn1 := path.Join("web", "public", "storage", fn)
+	out, err := os.Create(fn1)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func NewPic(rid uint64, f io.Reader, fn string) (*Pic, error) {
 	// store in db
 	p := new(Pic)
 	p.RID = rid
-	p.Name = fn
+	p.Name = path.Join("/static", "storage", fn)
 
 	// Insert Pic
 	// name could be SQL injection so yeah

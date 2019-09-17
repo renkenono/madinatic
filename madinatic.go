@@ -4,6 +4,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/renkenn/madinatic/model"
+
 	"github.com/gorilla/mux"
 	"github.com/renkenn/madinatic/config"
 	"github.com/renkenn/madinatic/route"
@@ -23,6 +25,15 @@ func main() {
 	if err != nil {
 		log.Panicf("%sfailed to init db connection: %s", config.FATAL, err.Error())
 	}
+
+	// create the admin's account
+	model.NewAuth("1", "admin", "admin@admin.com", "admin", "213566643311", "Admin")
+	// _, errs := model.NewAuth("1", "admin", "admin@admin.com", "admin", "213566643311", "Admin")
+	// if len(errs) > 0 {
+	// 	for _, e := range errs {
+	// 		fmt.Println(e.Error())
+	// 	}
+	// }
 
 	// close db connection when server is done
 	defer config.DB.Close()

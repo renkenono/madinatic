@@ -9,4 +9,5 @@
 
 # Ignore local files
 storage/*
+web/public/storage/*
 config.json

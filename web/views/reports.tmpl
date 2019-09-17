@@ -1,0 +1,139 @@
+{{ define "reports" }}
+
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/static/css/allrep.css">
+        <link rel="stylesheet" href="/static/css/header.css">
+        <link rel="stylesheet" href="/static/css/footer.css">
+        <link rel="stylesheet" href="/static/css/all.min.css"/>
+        <link rel="stylesheet" href="/static/css/font-awesome.min.css"/>    
+        <title>Les Rapports</title>
+    </head>
+
+    
+    <body>
+        
+            <!--nav bar div-->
+       
+                    <nav  class="navbar">
+                      
+                      {{ if .guest }}
+                        <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a>
+                       <a   href="/login"><input class ="rege" name="page" type="button" value="Se connecter" ></a> 
+                      {{ else }}
+                        <!--ul hidden with css-->
+                        <ul class="out"> 
+                            <li>{{ .username }}</li>
+                            <li><a href="/settings"><input class ="rege" name="page" type="button" value="Configuration" ></a></li>
+                            <li><a href="/logout"><input class ="rege" name="page" type="button" value="Se déconnecter" ></a></li>
+                        </ul>
+                      {{ end }}
+                      
+                          <ul class="nav menu">
+                          
+                              <li ><a href="/" ><i class="fas fa-home"></i>Accueil</a></li>                    
+                              <li><a href="/reports" class="active">Les Rapports</a></li>
+                              <li><a href="/report/create">Créer un Rapport</a></li>
+                              <li><a href="#">Aide</a></li>
+                              <li><a href="/faq">FAQ</a></li>
+                            
+                          </ul>
+                      
+                
+                </nav>
+                
+           <!--nav bar div-->
+
+<!--Posts div-->
+    <div class="posts">
+        
+<!-- repeat for every 3 reports-->
+        {{ range .slides }}
+        <div class="container">
+          <!-- repeat 3 -->
+          {{ range . }}
+         <div>
+            <img src="{{ .Picture }}" width="300" height="250">
+            <h4>Titre {{ .Title}} </h4>
+            <h4>Adresse  {{ .Address }} </h4>
+            <h4>Catégories {{ .Categories }}</h4>
+            <a href="{{ .Link }}"><input class ="Det"  type="button" value="Détails" > </a>
+         </div>
+            {{ end }}
+        </div>
+        {{ end }}
+
+        <!-- end container div-->
+        <!-- that div just for testing the same as container div -->
+
+    </div>
+     <!-- end Posts div-->
+
+
+
+
+
+     <div class="footer">
+        <div class="footer-content">
+            <div class="footer-section-about">
+              
+                <img src="/static/img/logo.png" height="100" width="150">
+                <h1 style="color: white;">Madina-TIC</h1>
+      
+            </div>
+                <div class="footer-section-links">
+                  <div class="Mobile-app">
+      
+                 
+                 <ul>
+                   <li><i class="fas fa-phone"></i>+213 689 568 021</li>
+                   <li><i class="fas fa-envelope"></i>contact@madina-tic.dz</li>
+                   <li><i class="fas fa-map-marker-alt"></i>Sidi belabbes</li>
+                   
+                 </ul>
+                </div>
+              </div>
+      
+                
+                <div class="reges">
+                    <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a><br>
+                    <a href="/login"><input class ="rege" name="page" type="button" value="Se connecter"></a>
+                 
+      
+      
+                </div>
+                
+                    
+      
+        </div>
+        <hr/>
+        <div class="footer-bottom">
+            <div class="cont">
+                <p> &copy; Madina-TIC</p>
+           <ul>
+              <li>Follow us at:</li>
+              <li>  <a class="f" href="#"><i class="fab fa-facebook-square"></i></a> </li>
+              
+             
+                <li> <a href="#"><i class="fab fa-twitter-square"></i></a> </li>
+               <li>  <a href="#"><i class="fab fa-instagram"></i></a></li>
+               <li>  <a href="#"><i class="fab fa-youtube"></i></a></li>
+               
+               
+                 
+            </ul>
+               </div>
+        
+      
+        </div>
+        
+      </div>
+    
+    </body>
+    
+    
+</html>
+
+{{ end }}

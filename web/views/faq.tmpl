@@ -1,0 +1,198 @@
+{{ define "faq" }}
+<html>
+<head>
+        <meta charset="utf-8">
+        <link rel="stylesheet" href="/static/css/faq.css" />
+        <link rel="stylesheet" href="/static/css/header.css" />
+        <link rel="stylesheet" href="/static/css/footer.css" />
+        <link rel="stylesheet" href="/static/css/all.min.css"/>
+        <link rel="stylesheet" href="/static/css/font-awesome.min.css"/>
+        <title>FAQ</title>
+
+</head>
+<body>
+
+        <nav  class="navbar">
+      
+                {{ if .guest }}
+        <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a>
+        <a href="/login"><input class ="rege" name="page" type="button" value="Se connecter" ></a>
+        {{ else }}
+         <!--ul hidden with css-->
+         <ul class="out"> 
+           <li>{{ .username }}</li>
+            <li><a href="/settings"><input class ="rege" name="page" type="button" value="Configuration" ></a></li>
+           <li><a href="/logout"><input class ="rege" name="page" type="button" value="Se déconnecter" ></a></li>
+         </ul>
+         {{ end }}
+             
+              
+                  <ul class="nav menu">
+                  
+                      <li ><a href="/" ><i class="fas fa-home"></i>Accueil</a></li>                    
+                      <li><a href="/reports">Les Rapports</a></li>
+                      <li><a href="/report/create">Créer un Rapport</a></li>
+                      <li><a href="#">Aide</a></li>
+                      <li><a href="/faq" class="active">FAQ</a></li>
+                    
+                  </ul>
+              
+        
+        </nav>
+
+
+        <div class="que">
+            <div class="top">
+              <h2 >1. Qu’est-ce que Madina-TIC? Quels sont ses objectifs?</h2>
+              <p>Madina-TIC est une plateforme internet et mobile mise à la disposition du citoyen et de l’administration pour signaler des incidents dans l’espace public.
+                </p>
+                   <ul>
+                  <li>  Une aide pour localiser et décrire les dégradations.</li>
+                  <li> Un outil qui informe les citoyens et les administrations à chaque étape clef de la résolution de l’incident.</li> 
+                </ul>
+                 
+                
+
+            </div>
+
+            <div>
+                <h2>2. Quels incidents puis-je signaler ?</h2>
+                <p>Un incident est une défectuosité de l'espace public.<br>
+
+               Les types d’incidents suivants sur chaussées, espaces verts, pistes cyclables, ponts, tunnels et trottoirs sont couverts :
+            <ul>
+                <li>Affaissement</li>
+                <li>Débris / Objets abandonnés</li>
+                <li>Eclairage public</li>
+                <li>Fontaines</li>
+                <li>Marquage effacé</li>
+                <li>Mobilier urbain</li>
+                <li>Plantations</li>
+                <li>Récolte des eaux</li>
+                <li>Revêtement dégradé</li>
+                <li>Signalisation</li>
+                <li>Trou</li>
+                <li>Etc ...</li>
+            </ul>
+            
+            
+            </p>
+            </div>
+
+            <div>
+                <h2>3. Pourquoi mon incident n'est-il pas publié ?</h2>
+                <p>Un incident peut être invalidé par les gestionnaires du site :<br>
+
+                        L’incident signalé ne concerne pas une dégradation qui requiert une remise en état. Vous serez notifié par le gestionnaire que votre incident a été invalidé.<br>
+                        L’incident a déjà été signalé par quelqu’un d’autre. Le numéro de l’incident déjà signalé vous sera communiqué pour que vous puissiez vous y abonner si souhaité.<br>
+                        L’incident concerne une dégradation qui ne rentre pas dans le périmètre de Madina-TIC</p>
+            </div>
+            <div>
+             <h2>4. Qui peut voir mes informations personnelles ?</h2>
+             <p>Si vous soumettez un incident, nous transmettons vos coordonnées ainsi que les détails de l'incident au gestionnaire responsable (communal, régional ou autre). Les coordonnées que vous fournissez (nom, téléphone, email) serviront à éventuellement reprendre contact avec vous si cela s'avère nécessaire.<br>
+
+                    Aucune information personnelle n'est affichée sur le site public ou communiquée à un tiers, à moins que nous n’y soyons obligés par la loi.</p>
+            
+
+
+            </div>
+        
+            <div>
+                <h2>5. Qui gère ce site ?</h2>
+                <p>
+                        Le site web et l'application mobile ont été développés et sont maintenus par Madina-TIC.<br>
+                        
+                        L'idée originale a été inspiré par FixMyStreet.<br>
+                        
+                        Le projet a été réalisé et adapté pour n'importe Région par Madina-TIC .<br>
+                        
+                        Coordonnées de contact :<br>
+                       <ul>
+                        <li>Sidi Bel Abbes</li>
+                        <li>Sidi Bel Abbes - ESI SBA</li>
+                        <li>+213 x xx xx xx xx</li>
+                        <li>mail@madina-tic.dz</li>
+
+
+                       </ul>
+
+                    </p>
+
+            </div>
+
+           <div class="bottom">
+               <h2 >6. Application mobile</h2>
+               <p>
+                    Vous souhaitez signaler un incident avec votre smartphone ?
+
+                    C’est simple et efficace pour localiser l’incident, prendre les photos et transmettre l’incident aux gestionnaires.
+                    
+                    Vous trouverez l’application pour signaler un incident sur MadinaTIC Street sur les app stores pour Android.<br><br>
+                    <a href="#"><img src="/static/img/play-store.png" height="50" width="150"></a>
+               </p>
+           </div>
+            
+
+
+        </div>
+     <div class="footer">
+        <div class="footer-content">
+            <div class="footer-section-about">
+              
+                <img src="/static/img/logo.png" height="100" width="150">
+                <h1 style="color: white;">Madina-TIC</h1>
+      
+            </div>
+                <div class="footer-section-links">
+                  <div class="Mobile-app">
+      
+                 
+                 <ul>
+                   <li><i class="fas fa-phone"></i>+213 689 568 021</li>
+                   <li><i class="fas fa-envelope"></i>contact@madina-tic.dz</li>
+                   <li><i class="fas fa-map-marker-alt"></i>Sidi belabbes</li>
+                   
+                 </ul>
+                </div>
+              </div>
+      
+                
+                <div class="reges">
+                    <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a><br>
+                    <a href="/login"><input class ="rege" name="page" type="button" value="Se connecter"></a>
+                 
+      
+      
+                </div>
+                
+                    
+      
+        </div>
+        <hr/>
+        <div class="footer-bottom">
+            <div class="cont">
+                <p> &copy; Madina-TIC</p>
+           <ul>
+              <li>Follow us at:</li>
+              <li>  <a class="f" href="#"><i class="fab fa-facebook-square"></i></a> </li>
+              
+             
+                <li> <a href="#"><i class="fab fa-twitter-square"></i></a> </li>
+               <li>  <a href="#"><i class="fab fa-instagram"></i></a></li>
+               <li>  <a href="#"><i class="fab fa-youtube"></i></a></li>
+               
+               
+                 
+            </ul>
+               </div>
+        
+      
+        </div>
+        
+      </div>
+
+</body>
+
+</html>
+
+{{ end }}

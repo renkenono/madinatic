@@ -1,13 +1,161 @@
 {{ define "home" }}
 <html>
-	<head>
-		<title>Home</title>
-	</head>
-	<link rel="stylesheet" href="/static/css/style.css">
-	<body>
-		flash: {{ .flash }}
 
-	</body>
+ <head>
+
+  <meta charset="utf-8">
+    <link rel="stylesheet" href="/static/css/home.css"/>
+    <link rel="stylesheet" href="/static/css/footer.css"/>
+    <link rel="stylesheet" href="/static/css/all.min.css"/>
+    <link rel="stylesheet" href="/static/css/font-awesome.min.css"/>
+    <title>Accueil</title>
+ </head>
+   <body>
+     <div id="main" class="bar">  
+     
+      <!--The start of the nav bar-->
+
+    <nav  class="navbar">
+      
+        {{ if .guest }}
+        <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a>
+        <a href="/login"><input class ="rege" name="page" type="button" value="Se connecter" ></a>
+        {{ else }}
+         <!--ul hidden with css-->
+         <ul class="out"> 
+           <li>{{ .username }}</li>
+           <li><a href="/settings"><input class ="rege" name="page" type="button" value="Configuration" ></a></li>
+           <li><a href="/logout"><input class ="rege" name="page" type="button" value="Se déconnecter" ></a></li>
+         </ul>
+         {{ end }}
+      
+          <ul class="nav menu">
+          
+              <li ><a href="/" class="active"><i class="fas fa-home"></i>Accueil</a></li>                    
+              <li><a href="/reports">Les Rapports</a></li>
+              <li><a href="/report/create">Créer un Rapport</a></li>
+              <li><a href="#">Aide</a></li>
+              <li><a href="/faq">FAQ</a></li>
+            
+          </ul>
+      
+
+</nav>
+
+<!--The end of the nav bar-->
+
+
+
+<div class="container">
+
+
+  <!-- video div-->
+
+
+  <div class="video">
+    <img src="/static/img/tel.png">
+
+    
+  </div>
+
+  <!--end video div-->
+  <div class="sec2">
+
+<!--Instruction div-->
+    <div class="inst"> 
+      <h1>Comment signaler un problème</h1>
+      <ul>
+        <li>Entrez un code postal DZ le plus proche, ou le nom de la rue et de la région</li>
+        <li>Localisez le problème sur la carte de la région</li>
+        <li>Entrez les détails du problème</li>
+        <li>Nous l'envoyons au conseil en votre nom</li>
+
+      </ul>
+    </div>
+ <!--end Instruction div-->
+    
+<!--Posts div-->
+
+<div class="posts"> 
+     <h2>Derniers incidents traités</h2>
+
+     <!-- the mainpost div that contains 2 divs for posting-->
+        
+        {{ range .slides }}
+          <div class="mainpost" >
+          {{ range . }}
+           <div>
+            <img src="{{ .Picture }}" width="300" height="200">
+            <p><span><b>Titre: {{ .Title }}</b></span></p>
+               <p><span><b>Adresse: {{ .Address }}</b></span></p>
+               <p><span><b>Catégories: {{ .Categories }} </b></span></p>
+            <a href="{{ .Link }}"><input class ="Det"  type="button" value="Détails" > </a>
+          </div>
+          {{ end }}
+          </div>
+        {{ end }}
+<!-- the end of mainpost div -->
+  
+</div>
+
+<!--end Posts div-->
+
+</div>
+    
+     <div class="footer">
+        <div class="footer-content">
+            <div class="footer-section-about">
+              
+                <img src="/static/img/logo.png" height="100" width="150">
+                <h1 style="color: white;">Madina-TIC</h1>
+      
+            </div>
+                <div class="footer-section-links">
+                  <div class="Mobile-app">
+      
+                 
+                 <ul>
+                   <li><i class="fas fa-phone"></i>+213 689 568 021</li>
+                   <li><i class="fas fa-envelope"></i>contact@madina-tic.dz</li>
+                   <li><i class="fas fa-map-marker-alt"></i>Sidi belabbes</li>
+                   
+                 </ul>
+                </div>
+              </div>
+      
+                
+                <div class="reges">
+                    <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a><br>
+                    <a href="/login"><input class ="rege" name="page" type="button" value="Se connecter"></a>
+                </div>
+                
+                    
+      
+        </div>
+        <hr/>
+        <div class="footer-bottom">
+            <div class="cont">
+                <p> &copy; Madina-TIC</p>
+           <ul>
+              <li>Follow us at:</li>
+              <li>  <a class="f" href="#"><i class="fab fa-facebook-square"></i></a> </li>
+              
+             
+                <li> <a href="#"><i class="fab fa-twitter-square"></i></a> </li>
+               <li>  <a href="#"><i class="fab fa-instagram"></i></a></li>
+               <li>  <a href="#"><i class="fab fa-youtube"></i></a></li>               
+            </ul>
+               </div>
+        
+      
+        </div>
+        
+      </div>
+
+   </body>
+
+
+
 </html>
 
 {{ end }}

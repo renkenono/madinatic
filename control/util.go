@@ -34,12 +34,27 @@ const (
 
 // Views constants
 const (
-	ViewLogin        = 0
-	ViewRegister     = iota
-	ViewReset        = iota
-	ViewHome         = iota
-	ViewSettings     = iota
-	ViewReportCreate = iota
+	ViewLogin               = 0
+	ViewRegister            = iota
+	ViewReset               = iota
+	ViewHome                = iota
+	ViewSettings            = iota
+	ViewReportCreate        = iota
+	ViewAuthCreate          = iota
+	ViewFAQ                 = iota
+	ViewReports             = iota
+	ViewDashboardUsers      = iota
+	ViewDashboardAuth       = iota
+	ViewDashboardAccReports = iota
+	ViewDashboardPenReports = iota
+	ViewErr                 = iota
+	ViewReportDetails       = iota
+	ViewDashboardCats       = iota
+)
+
+const (
+	isAdminErr    = "is admin failed"
+	isLoggedInErr = "is logged in failed"
 )
 
 // Out holds messages sent to the end user
@@ -74,6 +89,16 @@ var (
 		"home",
 		"settings",
 		"report_create",
+		"d_new_auth",
+		"faq",
+		"reports",
+		"d_users",
+		"d_auth",
+		"d_reports_accepted",
+		"d_reports_pending",
+		"err",
+		"report",
+		"d_cats",
 	}
 
 	viewsPath = path.Join("web", "views")
@@ -141,4 +166,34 @@ func ParseAccessToken(w http.ResponseWriter, tknStr string) (string, error) {
 
 	return claims.Issuer, nil
 
+}
+
+// IsAdmin returns whether the request was sent
+// by the admin or someone else
+func IsAdmin(w http.ResponseWriter, r *http.Request) bool {
+
+	username, ok := IsLoggedIn(w, r)
+	if !ok && username != "admin" {
+		http.Redirect(w, r, "/login", http.StatusUnauthorized)
+		return false
+	}
+
+	return true
+}
+
+// IsLoggedIn returns whether the user is logged in or not
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) (string, bool) {
+	s, err := config.Store.Get(r, "userdata")
+	if err != nil {
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		log.Printf("%s%s: %s", config.INFO, isLoggedInErr, err.Error())
+		return "", false
+	}
+
+	username, ok := s.Values["username"]
+	if !ok {
+		return "", false
+	}
+
+	return username.(string), true
 }

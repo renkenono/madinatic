@@ -132,7 +132,7 @@ func Login(username, pass string) (*User, error) {
 func (u *User) Cname() (string, error) {
 	err := u.IsCitizen()
 	if err != nil {
-		if err != ErrNotCitizen {
+		if err == ErrNotCitizen {
 			// Auth
 			a, err := AuthByUsername(u.Username)
 			if err != nil {
@@ -522,6 +522,20 @@ func (u *User) Confirm(t string) error {
 
 // Delete a user
 func (u *User) Delete() error {
+
+	rs, err := ReportsByUser(u.Username)
+	if err != nil {
+		return err
+	}
+
+	for _, r := range rs {
+		// admin id 1
+		err := r.EditUser(1)
+		if err != nil {
+			return err
+		}
+	}
+
 	config.DB.Lock()
 	defer config.DB.Unlock()
 	stmt, err := config.DB.Prepare("DELETE FROM users WHERE pk_userid = ?")

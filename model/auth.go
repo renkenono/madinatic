@@ -63,6 +63,24 @@ func NewAuth(id, username, email, pass, phone, name string) (*Auth, []error) {
 	return a, nil
 }
 
+// NewAuthID returns last_auth_id + 1
+// finish adding new auth <------------
+func NewAuthID() (uint64, error) {
+
+	config.DB.Lock()
+
+	defer config.DB.Unlock()
+	// default id for first auth is 2
+	var lid uint64 = 1
+	err := config.DB.QueryRow("SELECT pk_userid FROM authorities ORDER BY pk_userid DESC LIMIT 1;").Scan(&lid)
+	if err != nil && err != sql.ErrNoRows {
+		return lid, err
+	}
+
+	lid++
+	return lid, nil
+}
+
 // Auths returns list of authorities
 func Auths() ([]*Auth, error) {
 	var as []*Auth
