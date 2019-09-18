@@ -121,30 +121,6 @@ func ViewReport(w http.ResponseWriter, r *http.Request) {
 	Render(w, r, data, ViewReportDetails, "report.tmpl")
 }
 
-// ViewReportAPI report
-func ViewReportAPI(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	re, err := model.ReportByID(vars["id"])
-	if err != nil {
-		if err != model.ErrReportDoesNotExist {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		log.Printf("%s%s: %s", config.ERROR, viewAPIErr, err.Error())
-		return
-
-	}
-	u, err := model.UserByIDi(re.UID)
-	if err != nil {
-		if err != model.ErrUserDoesNotExist {
-			w.WriteHeader(http.StatusInternalServerError)
-		}
-		log.Printf("%s%s: %s", config.ERROR, viewAPIErr, err.Error())
-		return
-	}
-	re.Username = u.Username
-	w.Write([]byte(fmt.Sprintln(re)))
-}
-
 func isAuthofReport(username string, r *model.Report) (bool, error) {
 	auths, err := r.Auths()
 	if err != nil {
@@ -197,4 +173,28 @@ func Solve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/report/view/%d", re.ID), http.StatusFound)
+}
+
+// ViewReportAPI report
+func ViewReportAPI(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	re, err := model.ReportByID(vars["id"])
+	if err != nil {
+		if err != model.ErrReportDoesNotExist {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		log.Printf("%s%s: %s", config.ERROR, viewAPIErr, err.Error())
+		return
+
+	}
+	u, err := model.UserByIDi(re.UID)
+	if err != nil {
+		if err != model.ErrUserDoesNotExist {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		log.Printf("%s%s: %s", config.ERROR, viewAPIErr, err.Error())
+		return
+	}
+	re.Username = u.Username
+	w.Write([]byte(fmt.Sprintln(re)))
 }

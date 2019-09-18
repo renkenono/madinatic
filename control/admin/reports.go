@@ -259,13 +259,16 @@ func Accept(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newCats := r.MultipartForm.Value["cats"]
+	newCats := r.MultipartForm.Value["cat"]
 
 	for _, c := range cats {
+		fmt.Println("c", c)
 		rm := true
 		for _, nc := range newCats {
+			fmt.Println("nc", nc)
 			if c == nc {
 				rm = false
+				break
 			}
 		}
 		if rm {

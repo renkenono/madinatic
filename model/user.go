@@ -149,7 +149,7 @@ func (u *User) Cname() (string, error) {
 		return "", err
 	}
 
-	return c.FamilyName + " " + c.FamilyName, nil
+	return c.FamilyName + " " + c.FirstName, nil
 
 }
 

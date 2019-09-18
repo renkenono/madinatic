@@ -58,13 +58,13 @@
 				<br>
 
 				<label></label>
-				<input class="inputt" type="text" value="{{ .Lat }}"
+				<input class="inputt" type=number step=any value="{{ .Lat }}"
 					name="lat" placeholder="Latitude" required>
 				<p> {{ .LatErr }} </p>
 				<br>
 
 				<label></label>
-				<input class="inputt" type="text" value="{{ .Long }}"
+				<input class="inputt" type=number step=any value="{{ .Long }}"
 					name="long" placeholder="Longititude" required>
 				<p> {{ .LongErr }} </p>
 				<br>

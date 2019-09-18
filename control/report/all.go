@@ -49,6 +49,15 @@ func ReportsView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rss, err := model.ReportsByState(model.ReportSolved)
+	if err != nil {
+		http.Redirect(w, r, "/error", http.StatusInternalServerError)
+		log.Printf("%s%s: %s", config.INFO, reportsViewErr, err.Error())
+		return
+	}
+
+	rs = append(rs, rss...)
+
 	/* move inside the loop in case needed in the future
 	u, err := model.UserByIDi(re.UID)
 	if err != nil {
@@ -67,8 +76,9 @@ func ReportsView(w http.ResponseWriter, r *http.Request) {
 
 	var rsslides [][]reportSlide
 	var slide []reportSlide
-	done := false
+	var done bool
 	for i, re := range rs {
+		done = false
 		pics, err := re.Pics()
 		if err != nil {
 			http.Redirect(w, r, "/error", http.StatusInternalServerError)

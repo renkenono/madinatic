@@ -112,7 +112,7 @@ func CreateCat(w http.ResponseWriter, r *http.Request) {
 	selectedAuths := r.MultipartForm.Value["auth"]
 	if len(selectedAuths) == 0 {
 		http.Redirect(w, r, "/error", http.StatusInternalServerError)
-		log.Printf("%s%s: %s", config.INFO, catCreateErr, "no cats selected")
+		log.Printf("%s%s: %s", config.INFO, catCreateErr, "no auth selected")
 		return
 	}
 
