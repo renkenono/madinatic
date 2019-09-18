@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -75,14 +74,12 @@ func AuthCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println("getting lid")
 	lid, err := model.NewAuthID()
 	if err != nil {
 		http.Redirect(w, r, "/error", http.StatusInternalServerError)
 		log.Printf("%s%s: %s", config.ERROR, authCreateErr, err.Error())
 		return
 	}
-	fmt.Println("lid: ", lid)
 
 	su := req{
 		strconv.FormatUint(lid, 10),
@@ -126,10 +123,8 @@ func AuthCreate(w http.ResponseWriter, r *http.Request) {
 				errs["PhoneErr"] = Out[ErrPhoneExists]
 			case model.ErrPassInvalid:
 				errs["PassErr"] = Out[ErrPassInvalid]
-			case model.ErrFirstNameInvalid:
-				errs["FirstNameErr"] = Out[ErrFirstNameInvalid]
-			case model.ErrFamilyNameInvalid:
-				errs["FamilyNameErr"] = Out[ErrFamilyNameInvalid]
+			case model.ErrNameInvalid:
+				errs["NameErr"] = Out[ErrFirstNameInvalid]
 			default:
 				uerr = true
 			}
@@ -159,9 +154,9 @@ func AuthCreate(w http.ResponseWriter, r *http.Request) {
 	}
 	// report back errors
 	errs["Username"] = r.MultipartForm.Value["username"][0]
-	errs["Email"] = r.MultipartForm.Value["Email"][0]
-	errs["Phone"] = r.MultipartForm.Value["Phone"][0]
-	errs["Name"] = r.MultipartForm.Value["Name"][0]
+	errs["Email"] = r.MultipartForm.Value["email"][0]
+	errs["Phone"] = r.MultipartForm.Value["phone"][0]
+	errs["Name"] = r.MultipartForm.Value["name"][0]
 
 	errs["csrfField"] = csrf.TemplateField(r)
 	cats, err := model.Cats()
@@ -209,9 +204,9 @@ func AuthsView(w http.ResponseWriter, r *http.Request) {
 
 func linkAuthCat(r *http.Request, username, errstr string) error {
 	selectedCs := r.MultipartForm.Value["cat"]
-	if len(selectedCs) == 0 {
-		return errors.New("no cats selected")
-	}
+	// if len(selectedCs) == 0 {
+	// 	return errors.New("no cats selected")
+	// }
 
 	for _, c := range selectedCs {
 		_, err := model.NewCat(c, username)

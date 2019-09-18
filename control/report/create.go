@@ -68,9 +68,11 @@ func Create(w http.ResponseWriter, r *http.Request) {
 		}
 
 		var cs []*model.Cat
-		for i := 0; i < len(cats)-1; i++ {
-			in := false
-			for j := i + 1; j < len(cats); j++ {
+		var in bool
+		var i, j int
+		for i = 0; i < len(cats)-1; i++ {
+			in = false
+			for j = i + 1; j < len(cats); j++ {
 				if cats[i].Name == cats[j].Name {
 					in = true
 					break
@@ -79,6 +81,9 @@ func Create(w http.ResponseWriter, r *http.Request) {
 			if !in || i == len(cats)-2 {
 				cs = append(cs, cats[i])
 			}
+		}
+		if !in {
+			cs = append(cs, cats[len(cats)-1])
 		}
 		data := map[string]interface{}{
 			"csrfField": csrf.TemplateField(r),

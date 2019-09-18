@@ -32,10 +32,6 @@ var (
 // NewAuth auth name is basically the same as username
 func NewAuth(id, username, email, pass, phone, name string) (*Auth, []error) {
 	var errs []error
-	err := ValidateCitizenName(name, "")
-	if err != nil {
-		return nil, []error{err}
-	}
 
 	u, uerrs := NewUser(id, username, email, pass, phone, true)
 	if len(uerrs) > 0 {

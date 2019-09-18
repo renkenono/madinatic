@@ -55,27 +55,28 @@
     <div class="info">
         <h1>{{ .report.Title }}
         {{ if .report.IsAuth }}
-        {{ if .report.IsSolved }}
-            <a href="{{ .report.Solve }}"><input class ="rege" name="page" type="button" value="Valider" ></a>
-        {{ end }}
+        
+            <a {{ if .report.IsSolved }} style="display: none;" {{ end }}
+            href="{{ .report.Solve }}"><input class ="rege" name="page" type="button" value="Valider" ></a>
+        
         {{ end }}
         </h1>
-        <p class="user">By {{ .report.UserCname }} (@{{ .report.Username }}) at {{ .report.CreatedAt }} </p>
+        <p class="user">Par {{ .report.UserCname }} (@{{ .report.Username }}) à {{ .report.CreatedAt }} </p>
         <p class="add"><i class="fas fa-map-marker-alt"></i>{{ .report.Address }}</p>
         {{ range .report.Categories }}
         <p class="cat"><i class="fas fa-building"></i>{{ . }}</p>
         {{ end }}
         {{ if .report.IsSolved }}
-        <p class="state1">Fixée</p>
+        <p class="state1">Résolu</p>
         {{ end }}
         {{ if .report.IsAccepted }}
-        <p class="state2">non-Fixée</p>
+        <p class="state2">Non-Résolu</p>
         {{ end }}
         {{ if .report.IsPending }}
-        <p class="state3">inaprouvée</p>
+        <p class="state3">Inaprouvé</p>
         {{ end }}
-        <p class="update">last updated at {{ .report.ModifiedAt }} </p>
-        <h2>Déscription</h2>
+        <p class="update">Dernière mise à jour à {{ .report.ModifiedAt }} </p>
+        <h2>Description</h2>
 
         <p class="d">{{ .report.Desc }}</p>
       

@@ -312,7 +312,7 @@ func ReportsLatest(n uint64) ([]*Report, error) {
 	config.DB.Lock()
 	defer config.DB.Unlock()
 
-	rows, err := config.DB.Query("SELECT pk_reportid, title, descr, reports.created_at, addr, curr_state, fk_userid, users.username FROM reports JOIN users ON users.pk_userid = reports.fk_userid ORDER BY reports.pk_reportid DESC LIMIT ?;", n)
+	rows, err := config.DB.Query("SELECT pk_reportid, title, descr, reports.created_at, addr, curr_state, fk_userid, users.username FROM reports JOIN users ON users.pk_userid = reports.fk_userid WHERE curr_state > 1 ORDER BY reports.pk_reportid DESC LIMIT ?;", n)
 	if err != nil {
 		return nil, err
 	}
