@@ -1,0 +1,13 @@
+# Ignore all
+*
+
+# Unignore all with extensions
+!*.*
+
+# Unignore all dirs not needed yet
+!*/
+
+# Ignore local files
+storage/*
+web/public/storage/*
+config.json

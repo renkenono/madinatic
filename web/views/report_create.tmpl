@@ -1,0 +1,155 @@
+{{ define "report_create" }}
+<html>
+<head>
+		<meta charset="utf-8">
+				<link rel="stylesheet" href="/static/css/sign.css">
+				<link rel="stylesheet" href="/static/css/home.css">
+
+				<link rel="stylesheet" href="/static/css/all.min.css"/>
+		<link rel="stylesheet" href="/static/css/font-awesome.min.css"/>
+
+		<title>Créer un rapport</title>
+		<!-- <script src="/static/js/reg.js"></script> -->
+</head>
+<body>
+
+	<div id="main" class="bar">
+
+		<nav  class="navbar">
+
+
+           <ul class="out"> 
+             <li> {{ .username }}</li>
+             <li><a href="/settings"><input class ="rege" name="page" type="button" value="Configuration" ></a></li>
+             <li><a href="/logout"><input class ="rege" name="page" type="button" value="Se déconnecter" ></a></li>
+           </ul>
+
+
+					<ul class="nav menu">
+
+							<li ><a href="/" ><i class="fas fa-home"></i>Accueil</a></li>
+															<li><a href="/reports">Les Rapports</a></li>
+															<li><a href="/report/create">Créer un Rapport</a></li>
+															<li><a href="#">Aide</a></li>
+															<li><a href="/faq">FAQ</a></li>
+
+					</ul>
+
+
+</nav>
+
+
+
+	 <div class="register">
+				<h1>Créer un rapport</h1>
+				<!-- name="f" -->
+		 <form id="register" name="f" action="/report/create" method='post' enctype="multipart/form-data">
+		 		{{ .csrfField }}
+				<label></label>
+				<input class="inputt" type="text" value="{{ .Title }}" name="title" 
+					placeholder="Titre de rapport" required>
+				<p> {{ .TitleErr }} </p>
+				<br>
+
+				<label></label>
+				<input class="inputt" type="text" value="{{ .Desc }}"
+					name="desc" placeholder="Description de rapport" required>
+				<p> {{ .DescErr }} </p>
+				<br>
+
+				<label></label>
+				<input class="inputt" type=number step=any value="{{ .Lat }}"
+					name="lat" placeholder="Latitude" required>
+				<p> {{ .LatErr }} </p>
+				<br>
+
+				<label></label>
+				<input class="inputt" type=number step=any value="{{ .Long }}"
+					name="long" placeholder="Longititude" required>
+				<p> {{ .LongErr }} </p>
+				<br>
+
+				<label></label>
+				<input class="inputt" type="text" value="{{ .Address }}"
+					name="address" placeholder="Address de rapport" required>
+				<p> {{ .AddressErr }} </p>
+				<br>
+
+				<label></label>
+				{{ range .Cats }}
+				<input type="checkbox" name="cat" value="{{ .Name }}"> {{ .Name }}<br>
+			    {{ end }}
+				<br>
+                <label for="file">Images:</label>
+			    <input type="file" name="pics" id="pics" multiple>
+  			    <button type='submit'>Envoyer</button>
+		 </form>
+
+
+	 </div>
+
+
+ <div class="footer">
+				<div class="footer-content">
+						<div class="footer-section-about">
+
+								<img src="/static/img/logo.png" height="100" width="150">
+								<h1 style="color: white;">Madina-TIC</h1>
+
+						</div>
+								<div class="footer-section-links">
+									<div class="Mobile-app">
+
+
+								 <ul>
+									 <li><i class="fas fa-phone"></i>+213 689 568 021</li>
+									 <li><i class="fas fa-envelope"></i>contact@madina-tic.dz</li>
+									 <li><i class="fas fa-map-marker-alt"></i>Sidi belabbes</li>
+
+								 </ul>
+								</div>
+							</div>
+
+
+								<div class="reges">
+										<a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a><br>
+										<a href="/login"><input class ="rege" name="page" type="button" value="Se connecter"></a>
+
+
+
+								</div>
+
+
+
+				</div>
+				<hr/>
+				<div class="footer-bottom">
+						<div class="cont">
+								<p> &copy; Madina-TIC</p>
+					 <ul>
+							<li>Follow us at:</li>
+							<li>  <a class="f" href="#"><i class="fab fa-facebook-square"></i></a> </li>
+
+
+								<li> <a href="#"><i class="fab fa-twitter-square"></i></a> </li>
+							 <li>  <a href="#"><i class="fab fa-instagram"></i></a></li>
+							 <li>  <a href="#"><i class="fab fa-youtube"></i></a></li>
+
+
+
+						</ul>
+							 </div>
+
+
+				</div>
+
+			</div>
+
+
+	</body>
+
+
+
+</html>
+
+{{ end }}

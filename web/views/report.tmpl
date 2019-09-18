@@ -1,0 +1,158 @@
+{{ define "report" }}
+
+<!DOCTYPE html>
+<html>
+
+ <head>
+
+  <meta charset="utf-8"/>
+    <link rel="stylesheet" href="/static/css/details.css" />
+    <link rel="stylesheet" href="/static/css/home.css" />
+    <link rel="stylesheet" href="/static/css/footer.css" />
+    <link rel="stylesheet" href="/static/css/all.min.css"/>
+    <link rel="stylesheet" href="/static/css/font-awesome.min.css"/>
+    <title>Rapport - {{ .report.Title }}</title>
+
+ </head>
+   <body>
+     <div id="main" class="bar">  
+     
+      <!--The start of the nav bar-->
+
+      <nav  class="navbar">
+      
+          {{ if .guest }}
+          <a href="/register"><input class ="logine" name="page" type="button" value="S'inscrire"></a>
+          <a href="/login"><input class ="rege" name="page" type="button" value="Se connecter" ></a>
+          {{ else }}
+           <ul class="out"> 
+             <li> {{ .username }}</li>
+             <li><a href="/settings"><input class ="rege" name="page" type="button" value="Configuration" ></a></li>
+             <li><a href="/logout"><input class ="rege" name="page" type="button" value="Se déconnecter" ></a></li>
+           </ul>
+           {{ end }}
+           
+            <ul class="nav menu">
+            
+                <li><a href="/"><i class="fas fa-home"></i>Accueil</a></li>                    
+                <li><a href="/reports">Les Rapports</a></li>
+                <li><a href="/report/create">Créer un Rapport</a></li>
+                <li><a href="#">Aide</a></li>
+                <li><a href="/faq">FAQ</a></li>
+            </ul>
+        
+  
+  </nav>
+  
+<div class="details">
+   <div class="details-cont"> 
+
+    <div class="images">
+        {{ range .report.Pictures }}
+        <div><img src="{{ . }}"   width="450" height="400"></div>
+        {{ end }}
+    </div>
+    <div class="info">
+        <h1>{{ .report.Title }}
+        {{ if .report.IsAuth }}
+        
+            <a {{ if .report.IsSolved }} style="display: none;" {{ end }}
+            href="{{ .report.Solve }}"><input class ="rege" name="page" type="button" value="Valider" ></a>
+        
+        {{ end }}
+        </h1>
+        <p class="user">Par {{ .report.UserCname }} (@{{ .report.Username }}) à {{ .report.CreatedAt }} </p>
+        <p class="add"><i class="fas fa-map-marker-alt"></i>{{ .report.Address }}</p>
+        {{ range .report.Categories }}
+        <p class="cat"><i class="fas fa-building"></i>{{ . }}</p>
+        {{ end }}
+        {{ if .report.IsSolved }}
+        <p class="state1">Résolu</p>
+        {{ end }}
+        {{ if .report.IsAccepted }}
+        <p class="state2">Non-Résolu</p>
+        {{ end }}
+        {{ if .report.IsPending }}
+        <p class="state3">Inaprouvé</p>
+        {{ end }}
+        <p class="update">Dernière mise à jour à {{ .report.ModifiedAt }} </p>
+        <h2>Description</h2>
+
+        <p class="d">{{ .report.Desc }}</p>
+      
+    </div>
+
+</div>
+
+
+    
+    
+
+
+
+</div>
+
+
+<div class="footer">
+    <div class="footer-content">
+        <div class="footer-section-about">
+          
+            <img src="/static/img/logo.png" height="100" width="150">
+            <h1 style="color: white;">Madina-TIC</h1>
+  
+        </div>
+            <div class="footer-section-links">
+              <div class="Mobile-app">
+  
+             
+             
+            </div>
+          </div>
+  
+            
+            <div class="reges">
+                <ul>
+                    <li><i class="fas fa-phone"></i>+213 689 568 021</li>
+                    <li><i class="fas fa-envelope"></i>contact@madina-tic.dz</li>
+                    <li><i class="fas fa-map-marker-alt"></i>Sidi belabbes</li>
+                    
+                  </ul>
+                
+             
+  
+  
+            </div>
+            
+                
+  
+    </div>
+    <hr/>
+    <div class="footer-bottom">
+        <div class="cont">
+            <p> &copy; Photo,Inc 2019 ,We love our users!</p>
+       <ul>
+          <li>Follow us at:</li>
+          <li>  <a class="f" href="#"><i class="fab fa-facebook-square"></i></a> </li>
+          
+         
+            <li> <a href="#"><i class="fab fa-twitter-square"></i></a> </li>
+           <li>  <a href="#"><i class="fab fa-instagram"></i></a></li>
+           <li>  <a href="#"><i class="fab fa-youtube"></i></a></li>
+           
+           
+             
+        </ul>
+           </div>
+    
+  
+    </div>
+    
+  </div>
+  
+     </body>
+  
+  
+  
+  </html>
+
+{{ end }}
